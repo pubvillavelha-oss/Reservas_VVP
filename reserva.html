@@ -174,18 +174,18 @@
       const primeiroDia = new Date(anoAtual, mesAtual, 1);
       const diasNoMes = new Date(anoAtual, mesAtual + 1, 0).getDate();
       const inicioSemana = primeiroDia.getDay();
-      for (let i = 0; i &lt; inicioSemana; i++) {
+      for (let i = 0; i < inicioSemana; i++) {
         const vazio = document.createElement('div');
         vazio.className = 'cal-day empty';
         calDays.appendChild(vazio);
       }
-      for (let dia = 1; dia &lt;= diasNoMes; dia++) {
+      for (let dia = 1; dia <= diasNoMes; dia++) {
         const celula = document.createElement('div');
         celula.className = 'cal-day';
         celula.textContent = dia;
         const data = new Date(anoAtual, mesAtual, dia);
         const dataStr = formatarData(data);
-        if (data &lt; hoje) {
+        if (data < hoje) {
           celula.classList.add('past');
         } else {
           if (dataStr === formatarData(hoje)) celula.classList.add('today');
@@ -210,7 +210,7 @@
     document.getElementById('prevMonth').addEventListener('click', function (e) {
       e.stopPropagation();
       mesAtual--;
-      if (mesAtual &lt; 0) { mesAtual = 11; anoAtual--; }
+      if (mesAtual < 0) { mesAtual = 11; anoAtual--; }
       renderCalendario();
     });
     document.getElementById('nextMonth').addEventListener('click', function (e) {
@@ -244,9 +244,9 @@
     telefone.addEventListener('input', function () {
       const digits = this.value.replace(/\D/g, '').slice(0, 11);
       let formatted = '';
-      if (digits.length &lt;= 2) formatted = '(' + digits;
-      else if (digits.length &lt;= 6) formatted = '(' + digits.slice(0, 2) + ') ' + digits.slice(2);
-      else if (digits.length &lt;= 10) formatted = '(' + digits.slice(0, 2) + ') ' + digits.slice(2, 6) + '-' + digits.slice(6);
+      if (digits.length <= 2) formatted = '(' + digits;
+      else if (digits.length <= 6) formatted = '(' + digits.slice(0, 2) + ') ' + digits.slice(2);
+      else if (digits.length <= 10) formatted = '(' + digits.slice(0, 2) + ') ' + digits.slice(2, 6) + '-' + digits.slice(6);
       else formatted = '(' + digits.slice(0, 2) + ') ' + digits.slice(2, 7) + '-' + digits.slice(7);
       this.value = formatted;
     });
@@ -261,10 +261,10 @@
       if (!nomeReserva.value.trim()) { document.getElementById('erroNome').style.display = 'block'; valido = false; }
       else { document.getElementById('erroNome').style.display = 'none'; }
       const telefoneDigits = telefone.value.replace(/\D/g, '');
-      if (telefoneDigits.length &lt; 10 || telefoneDigits.length > 11) { document.getElementById('erroTelefone').style.display = 'block'; valido = false; }
+      if (telefoneDigits.length < 10 || telefoneDigits.length > 11) { document.getElementById('erroTelefone').style.display = 'block'; valido = false; }
       else { document.getElementById('erroTelefone').style.display = 'none'; }
       const lugares = parseInt(quantidadeLugares.value, 10);
-      if (!lugares || lugares &lt; 1 || lugares > 50) { document.getElementById('erroLugares').style.display = 'block'; valido = false; }
+      if (!lugares || lugares < 1 || lugares > 50) { document.getElementById('erroLugares').style.display = 'block'; valido = false; }
       else { document.getElementById('erroLugares').style.display = 'none'; }
       if (!motivoReserva.value) { document.getElementById('erroMotivo').style.display = 'block'; valido = false; }
       else { document.getElementById('erroMotivo').style.display = 'none'; }
