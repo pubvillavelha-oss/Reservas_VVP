@@ -76,8 +76,8 @@
     <input type="date" id="filtro-data">
   </div>
   <div class="campo">
-    <label for="filtro-nome">Nome (parcial)</label>
-    <input type="text" id="filtro-nome" placeholder="Ex.: João">
+    <label for="filtro-nome">Nome ou telefone</label>
+    <input type="text" id="filtro-nome" placeholder="Ex.: João ou 77 99999">
   </div>
   <button onclick="aplicarFiltros()">Buscar</button>
   <button class="secundario" onclick="limparFiltros()">Limpar</button>
@@ -134,7 +134,7 @@ function escapar(t) {
   return String(t ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// Lê o campo tentando variações de nome (com/sem acento etc.)
+// Lê campo aceitando variações de nome (data/nome/telefone/lugares/motivo/observacao/status)
 function campo(reg, chaves) {
   for (const c of chaves) {
     const v = reg[c];
@@ -162,45 +162,48 @@ function hojeISO() {
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 
-// ===== Busca na API =====
+function formatarDataBr(data) {
+  const s = String(data ?? '').trim();
+  if (!s) return '';
+  let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return m[3] + '/' + m[2] + '/' + m[1];
+  return s;
+}
+
+// ===== Busca na API (usa o parâmetro "busca" do seu doGet) =====
 async function buscarReservas() {
   const msg = document.getElementById('msg');
   msg.className = 'msg'; msg.textContent = '';
   try {
-    const resp = await fetch(API_URL);
+    // Monta a URL com o filtro de busca (nome/telefone) que seu doGet já suporta
+    const termo = document.getElementById('filtro-nome').value.trim();
+    let url = API_URL;
+    if (termo) url += '?busca=' + encodeURIComponent(termo);
+
+    const resp = await fetch(url);
     const texto = await resp.text();
     let dados;
     try { dados = JSON.parse(texto); }
-    catch (e) { throw new Error('A resposta do servidor não é um JSON válido.'); }
-    todasReservas = extrairLista(dados);
-    if (!todasReservas.length) throw new Error('Nenhuma reserva encontrada na resposta.');
+    catch (e) { throw new Error('Resposta não é JSON válido. Resposta bruta: ' + texto.slice(0,200)); }
+
+    todasReservas = Array.isArray(dados) ? dados : [];
+    if (!todasReservas.length) {
+      msg.className = 'msg erro';
+      msg.textContent = 'Nenhuma reserva encontrada. Verifique se o web app está publicado como "Qualquer pessoa".';
+    }
     aplicarFiltros();
   } catch (erro) {
     msg.className = 'msg erro';
-    msg.textContent = 'Erro ao carregar: ' + erro.message + ' Verifique se o web app está publicado como "Qualquer pessoa" e se a URL está correta.';
+    msg.textContent = 'Erro ao carregar: ' + erro.message;
   }
 }
 
-function extrairLista(dados) {
-  if (Array.isArray(dados)) return dados;
-  if (dados && Array.isArray(dados.data)) return dados.data;
-  if (dados && Array.isArray(dados.dados)) return dados.dados;
-  if (dados && Array.isArray(dados.reservas)) return dados.reservas;
-  if (dados && typeof dados === 'object') {
-    const vals = Object.values(dados);
-    if (vals.length === 1 && Array.isArray(vals[0])) return vals[0];
-  }
-  return [];
-}
-
-// ===== Filtros =====
+// ===== Filtros (data é filtrada no cliente) =====
 function aplicarFiltros() {
   const dataAlvo = normalizarData(document.getElementById('filtro-data').value);
-  const nomeAlvo = document.getElementById('filtro-nome').value.trim().toLowerCase();
   reservasFiltradas = todasReservas.filter(r => {
-    const dataOk = !dataAlvo || normalizarData(campo(r,['Data','data'])) === dataAlvo;
-    const nomeOk = !nomeAlvo || campo(r,['Nome','nome']).toLowerCase().includes(nomeAlvo);
-    return dataOk && nomeOk;
+    if (!dataAlvo) return true;
+    return normalizarData(campo(r,['data','Data'])) === dataAlvo;
   });
   indiceAtual = reservasFiltradas.length ? 0 : -1;
   renderizarLista();
@@ -210,7 +213,7 @@ function aplicarFiltros() {
 function limparFiltros() {
   document.getElementById('filtro-data').value = hojeISO();
   document.getElementById('filtro-nome').value = '';
-  aplicarFiltros();
+  buscarReservas();
 }
 
 // ===== Lista lateral =====
@@ -226,8 +229,8 @@ function renderizarLista() {
   reservasFiltradas.forEach((r, i) => {
     const div = document.createElement('div');
     div.className = 'item-reserva' + (i === indiceAtual ? ' ativo' : '');
-    div.innerHTML = '<div class="nome-item">' + escapar(campo(r,['Nome','nome'])) + '</div>' +
-      '<div class="meta-item">' + escapar(campo(r,['Data','data'])) + ' · ' + escapar(campo(r,['Lugares','lugares'])) + ' lugar(es) · ' + escapar(campo(r,['Status','status'])) + '</div>';
+    div.innerHTML = '<div class="nome-item">' + escapar(campo(r,['nome','Nome'])) + '</div>' +
+      '<div class="meta-item">' + escapar(formatarDataBr(campo(r,['data','Data']))) + ' · ' + escapar(campo(r,['lugares','Lugares'])) + ' lugar(es) · ' + escapar(campo(r,['status','Status'])) + '</div>';
     div.onclick = () => selecionar(i);
     corpo.appendChild(div);
   });
@@ -265,8 +268,8 @@ function atualizarPreview() {
 
 // ===== Cupom (layout exigido: RESERVADO PARA > NOME > LUGARES) =====
 function gerarCupomHtml(r) {
-  const nome = (campo(r,['Nome','nome']) || 'SEM NOME').toUpperCase();
-  const qtd = parseInt(campo(r,['Lugares','lugares']), 10) || 0;
+  const nome = (campo(r,['nome','Nome']) || 'SEM NOME').toUpperCase();
+  const qtd = parseInt(campo(r,['lugares','Lugares']), 10) || 0;
   const textoLugares = qtd === 1 ? '1 LUGAR' : qtd + ' LUGARES';
   return '<div class="cupom">' +
     '<div class="rotulo">Reservado para</div>' +
@@ -277,15 +280,15 @@ function gerarCupomHtml(r) {
 }
 
 function atualizarDetalhes(r) {
-  const qtd = parseInt(campo(r,['Lugares','lugares']), 10) || 0;
+  const qtd = parseInt(campo(r,['lugares','Lugares']), 10) || 0;
   document.getElementById('detalhes').innerHTML =
     '<table>' +
-    '<tr><td>Data</td><td>' + escapar(campo(r,['Data','data'])) + '</td></tr>' +
-    '<tr><td>Telefone</td><td>' + escapar(campo(r,['Telefone','telefone'])) + '</td></tr>' +
+    '<tr><td>Data</td><td>' + escapar(formatarDataBr(campo(r,['data','Data']))) + '</td></tr>' +
+    '<tr><td>Telefone</td><td>' + escapar(campo(r,['telefone','Telefone'])) + '</td></tr>' +
     '<tr><td>Lugares</td><td>' + qtd + '</td></tr>' +
-    '<tr><td>Motivo</td><td>' + escapar(campo(r,['Motivo','motivo'])) + '</td></tr>' +
-    '<tr><td>Observação</td><td>' + escapar(campo(r,['Observação','Observacao','observacao'])) + '</td></tr>' +
-    '<tr><td>Status</td><td>' + escapar(campo(r,['Status','status'])) + '</td></tr>' +
+    '<tr><td>Motivo</td><td>' + escapar(campo(r,['motivo','Motivo'])) + '</td></tr>' +
+    '<tr><td>Observação</td><td>' + escapar(campo(r,['observacao','Observação','Observacao'])) + '</td></tr>' +
+    '<tr><td>Status</td><td>' + escapar(campo(r,['status','Status'])) + '</td></tr>' +
     '</table>';
 }
 
