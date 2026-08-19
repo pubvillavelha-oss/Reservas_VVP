@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Impressão de Reservas — Villa Velha Pub</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; margin: 0; background: #f1f3f4; color: #202124; }
+
+  .topo { background: #111; color: #fff; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; }
+  .topo h1 { font-size: 18px; margin: 0; }
+
+  .painel-filtros { background: #fff; padding: 14px 16px; display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+  .campo { display: flex; flex-direction: column; gap: 4px; }
+  .campo label { font-size: 12px; font-weight: 700; color: #5f6368; }
+  .campo input { padding: 8px 10px; border: 1px solid #dadce0; border-radius: 6px; font-size: 14px; }
+
+  button { background: #1a73e8; color: #fff; border: 0; border-radius: 6px; padding: 9px 16px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  button:hover { opacity: .9; }
+  button.secundario { background: #fff; color: #1a73e8; border: 1px solid #1a73e8; }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+
+  .conteudo { display: flex; gap: 16px; padding: 16px; align-items: flex-start; flex-wrap: wrap; }
+  .lista { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.15); padding: 12px; width: 320px; max-height: 70vh; overflow-y: auto; }
+  .lista h2 { font-size: 14px; margin: 0 0 10px; }
+  .item-reserva { padding: 8px 10px; border-radius: 6px; cursor: pointer; border-bottom: 1px solid #eee; }
+  .item-reserva:hover { background: #e8f0fe; }
+  .item-reserva.ativo { background: #d2e3fc; }
+  .item-reserva .nome-item { font-weight: 700; font-size: 13px; }
+  .item-reserva .meta-item { font-size: 11px; color: #5f6368; margin-top: 2px; }
+
+  .lado-direito { flex: 1; min-width: 340px; max-width: 480px; }
+  .navegacao { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #fff; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+  .contador { font-size: 13px; font-weight: 700; }
+
+  .preview { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.15); padding: 12px; margin-bottom: 12px; }
+  .preview h2 { font-size: 14px; margin: 0 0 10px; }
+  #preview-cupom { width: 72mm; margin: 0 auto; border: 1px dashed #ccc; padding: 6mm 3mm; text-align: center; font-family: 'Courier New', Courier, monospace; background: #fff; }
+
+  .cupom .rotulo { font-size: 15pt; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+  .cupom .nome { font-size: 22pt; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-top: 2mm; line-height: 1.15; word-break: break-word; }
+  .cupom .lugares { font-size: 13pt; font-weight: 700; margin-top: 4mm; text-transform: uppercase; }
+  .cupom .separador { border-top: 1px dashed #555; margin: 3mm 0; }
+
+  .detalhes { margin-top: 12px; font-size: 13px; }
+  .detalhes table { width: 100%; border-collapse: collapse; }
+  .detalhes td { padding: 3px 0; border-bottom: 1px solid #eee; }
+  .detalhes td:first-child { font-weight: 700; width: 110px; color: #5f6368; }
+
+  .acoes { display: flex; gap: 10px; flex-wrap: wrap; }
+  .msg { padding: 10px; border-radius: 6px; font-size: 13px; margin-bottom: 12px; display: none; }
+  .msg.erro { background: #fce8e6; color: #c5221f; display: block; }
+
+  @media print {
+    @page { size: 80mm auto; margin: 0; }
+    html, body { margin: 0; padding: 0; background: #fff; }
+    body * { visibility: hidden; }
+    #area-impressao, #area-impressao * { visibility: visible; }
+    #area-impressao { position: absolute; left: 0; top: 0; width: 80mm; margin: 0; padding: 0; }
+    #area-impressao .cupom { width: 72mm; margin: 0 auto; padding: 5mm 0; text-align: center; font-family: 'Courier New', Courier, monospace; }
+    .corte { text-align: center; font-family: 'Courier New', Courier, monospace; font-size: 9pt; color: #333; padding: 1mm 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topo">
+  <h1>Impressão de Reservas</h1>
+  <button class="secundario" onclick="buscarReservas()">Atualizar dados</button>
+</div>
+
+<div class="painel-filtros">
+  <div class="campo">
+    <label for="filtro-data">Data</label>
+    <input type="date" id="filtro-data">
+  </div>
+  <div class="campo">
+    <label for="filtro-nome">Nome (parcial)</label>
+    <input type="text" id="filtro-nome" placeholder="Ex.: João">
+  </div>
+  <button onclick="aplicarFiltros()">Buscar</button>
+  <button class="secundario" onclick="limparFiltros()">Limpar</button>
+</div>
+
+<div class="conteudo">
+  <div class="lista">
+    <h2 id="titulo-lista">Reservas</h2>
+    <div id="corpo-lista"></div>
+  </div>
+
+  <div class="lado-direito">
+    <div class="msg" id="msg"></div>
+
+    <div class="navegacao">
+      <button id="btn-ant" onclick="navegar(-1)">◀ Anterior</button>
+      <span class="contador" id="contador">0 de 0</span>
+      <button id="btn-prox" onclick="navegar(1)">Próxima ▶</button>
+    </div>
+
+    <div class="preview">
+      <h2>Pré-visualização do cupom</h2>
+      <div id="preview-cupom">
+        <div class="cupom">
+          <div class="rotulo">Reservado para</div>
+          <div class="nome">—</div>
+          <div class="separador"></div>
+          <div class="lugares">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detalhes" id="detalhes"></div>
+
+    <div class="acoes">
+      <button onclick="imprimirAtual()">🖨️ Imprimir esta reserva</button>
+      <button id="btn-todas" onclick="imprimirTodas()">🖨️ Imprimir todas (0)</button>
+    </div>
+  </div>
+</div>
+
+<div id="area-impressao"></div>
+
+<script>
+// ===== CONFIGURAÇÃO =====
+const API_URL = 'https://script.google.com/macros/s/AKfycbwoINiSHHQhQt0jJqk_1Xy9E2uyXqNna5pB69F3GMfS-E74Pk0t_Sy3lGGYXzpBZEIpWg/exec';
+
+let todasReservas = [];
+let reservasFiltradas = [];
+let indiceAtual = 0;
+
+// ===== Utilitários =====
+function escapar(t) {
+  return String(t ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Lê o campo tentando variações de nome (com/sem acento etc.)
+function campo(reg, chaves) {
+  for (const c of chaves) {
+    const v = reg[c];
+    if (v !== undefined && v !== null && String(v).trim() !== '') return String(v).trim();
+  }
+  return '';
+}
+
+// Aceita dd/mm/aaaa ou aaaa-mm-dd
+function normalizarData(valor) {
+  const s = String(valor ?? '').trim();
+  if (!s) return '';
+  let m = s.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})$/);
+  if (m) {
+    let a = m[3]; if (a.length === 2) a = '20' + a;
+    return a + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+  }
+  m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (m) return m[1] + '-' + m[2].padStart(2,'0') + '-' + m[3].padStart(2,'0');
+  return s;
+}
+
+function hojeISO() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+// ===== Busca na API =====
+async function buscarReservas() {
+  const msg = document.getElementById('msg');
+  msg.className = 'msg'; msg.textContent = '';
+  try {
+    const resp = await fetch(API_URL);
+    const texto = await resp.text();
+    let dados;
+    try { dados = JSON.parse(texto); }
+    catch (e) { throw new Error('A resposta do servidor não é um JSON válido.'); }
+    todasReservas = extrairLista(dados);
+    if (!todasReservas.length) throw new Error('Nenhuma reserva encontrada na resposta.');
+    aplicarFiltros();
+  } catch (erro) {
+    msg.className = 'msg erro';
+    msg.textContent = 'Erro ao carregar: ' + erro.message + ' Verifique se o web app está publicado como "Qualquer pessoa" e se a URL está correta.';
+  }
+}
+
+function extrairLista(dados) {
+  if (Array.isArray(dados)) return dados;
+  if (dados && Array.isArray(dados.data)) return dados.data;
+  if (dados && Array.isArray(dados.dados)) return dados.dados;
+  if (dados && Array.isArray(dados.reservas)) return dados.reservas;
+  if (dados && typeof dados === 'object') {
+    const vals = Object.values(dados);
+    if (vals.length === 1 && Array.isArray(vals[0])) return vals[0];
+  }
+  return [];
+}
+
+// ===== Filtros =====
+function aplicarFiltros() {
+  const dataAlvo = normalizarData(document.getElementById('filtro-data').value);
+  const nomeAlvo = document.getElementById('filtro-nome').value.trim().toLowerCase();
+  reservasFiltradas = todasReservas.filter(r => {
+    const dataOk = !dataAlvo || normalizarData(campo(r,['Data','data'])) === dataAlvo;
+    const nomeOk = !nomeAlvo || campo(r,['Nome','nome']).toLowerCase().includes(nomeAlvo);
+    return dataOk && nomeOk;
+  });
+  indiceAtual = reservasFiltradas.length ? 0 : -1;
+  renderizarLista();
+  atualizarPreview();
+}
+
+function limparFiltros() {
+  document.getElementById('filtro-data').value = hojeISO();
+  document.getElementById('filtro-nome').value = '';
+  aplicarFiltros();
+}
+
+// ===== Lista lateral =====
+function renderizarLista() {
+  const corpo = document.getElementById('corpo-lista');
+  document.getElementById('titulo-lista').textContent = 'Reservas (' + reservasFiltradas.length + ')';
+  document.getElementById('btn-todas').textContent = '🖨️ Imprimir todas (' + reservasFiltradas.length + ')';
+  if (!reservasFiltradas.length) {
+    corpo.innerHTML = '<p style="font-size:13px;color:#5f6368;">Nenhuma reserva para a seleção.</p>';
+    return;
+  }
+  corpo.innerHTML = '';
+  reservasFiltradas.forEach((r, i) => {
+    const div = document.createElement('div');
+    div.className = 'item-reserva' + (i === indiceAtual ? ' ativo' : '');
+    div.innerHTML = '<div class="nome-item">' + escapar(campo(r,['Nome','nome'])) + '</div>' +
+      '<div class="meta-item">' + escapar(campo(r,['Data','data'])) + ' · ' + escapar(campo(r,['Lugares','lugares'])) + ' lugar(es) · ' + escapar(campo(r,['Status','status'])) + '</div>';
+    div.onclick = () => selecionar(i);
+    corpo.appendChild(div);
+  });
+}
+
+// ===== Navegação =====
+function selecionar(i) {
+  if (i < 0 || i >= reservasFiltradas.length) return;
+  indiceAtual = i;
+  renderizarLista();
+  atualizarPreview();
+}
+
+function navegar(dir) { selecionar(indiceAtual + dir); }
+
+// ===== Preview =====
+function atualizarPreview() {
+  const contador = document.getElementById('contador');
+  const btnAnt = document.getElementById('btn-ant');
+  const btnProx = document.getElementById('btn-prox');
+  if (!reservasFiltradas.length) {
+    contador.textContent = '0 de 0';
+    btnAnt.disabled = true; btnProx.disabled = true;
+    document.getElementById('preview-cupom').innerHTML = '<div class="cupom"><div class="rotulo">Reservado para</div><div class="nome">—</div><div class="separador"></div><div class="lugares">—</div></div>';
+    document.getElementById('detalhes').innerHTML = '';
+    return;
+  }
+  const r = reservasFiltradas[indiceAtual];
+  contador.textContent = (indiceAtual + 1) + ' de ' + reservasFiltradas.length;
+  btnAnt.disabled = indiceAtual === 0;
+  btnProx.disabled = indiceAtual === reservasFiltradas.length - 1;
+  document.getElementById('preview-cupom').innerHTML = gerarCupomHtml(r);
+  atualizarDetalhes(r);
+}
+
+// ===== Cupom (layout exigido: RESERVADO PARA > NOME > LUGARES) =====
+function gerarCupomHtml(r) {
+  const nome = (campo(r,['Nome','nome']) || 'SEM NOME').toUpperCase();
+  const qtd = parseInt(campo(r,['Lugares','lugares']), 10) || 0;
+  const textoLugares = qtd === 1 ? '1 LUGAR' : qtd + ' LUGARES';
+  return '<div class="cupom">' +
+    '<div class="rotulo">Reservado para</div>' +
+    '<div class="nome">' + escapar(nome) + '</div>' +
+    '<div class="separador"></div>' +
+    '<div class="lugares">' + textoLugares + '</div>' +
+    '</div>';
+}
+
+function atualizarDetalhes(r) {
+  const qtd = parseInt(campo(r,['Lugares','lugares']), 10) || 0;
+  document.getElementById('detalhes').innerHTML =
+    '<table>' +
+    '<tr><td>Data</td><td>' + escapar(campo(r,['Data','data'])) + '</td></tr>' +
+    '<tr><td>Telefone</td><td>' + escapar(campo(r,['Telefone','telefone'])) + '</td></tr>' +
+    '<tr><td>Lugares</td><td>' + qtd + '</td></tr>' +
+    '<tr><td>Motivo</td><td>' + escapar(campo(r,['Motivo','motivo'])) + '</td></tr>' +
+    '<tr><td>Observação</td><td>' + escapar(campo(r,['Observação','Observacao','observacao'])) + '</td></tr>' +
+    '<tr><td>Status</td><td>' + escapar(campo(r,['Status','status'])) + '</td></tr>' +
+    '</table>';
+}
+
+// ===== Impressão =====
+function imprimirAtual() {
+  if (!reservasFiltradas.length) { mostrarAviso('Nenhuma reserva para imprimir.'); return; }
+  document.getElementById('area-impressao').innerHTML = gerarCupomHtml(reservasFiltradas[indiceAtual]);
+  window.print();
+}
+
+function imprimirTodas() {
+  if (!reservasFiltradas.length) { mostrarAviso('Nenhuma reserva para imprimir.'); return; }
+  const html = reservasFiltradas.map(r => gerarCupomHtml(r)).join('<div class="corte">- - - - - - - - - - - - - - -</div>');
+  document.getElementById('area-impressao').innerHTML = html;
+  window.print();
+}
+
+function mostrarAviso(texto) {
+  const msg = document.getElementById('msg');
+  msg.className = 'msg erro';
+  msg.textContent = texto;
+}
+
+// ===== Inicialização =====
+document.getElementById('filtro-data').value = hojeISO();
+buscarReservas();
+</script>
+</body>
+</html>
