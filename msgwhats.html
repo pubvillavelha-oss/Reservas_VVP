@@ -169,7 +169,7 @@
       });
     }
 
-    // ===== Envio via WhatsApp (abre o APP do celular, não o navegador) =====
+    // ===== Envio via WhatsApp (abre o APP do celular) =====
     function enviarWhatsApp(numero, nome, mesa) {
       const desejaEnviar = confirm('Deseja enviar a mensagem de confirmação via WhatsApp para ' + (nome || 'o cliente') + '?');
       if (!desejaEnviar) return;
@@ -181,7 +181,7 @@
       abrirWhatsApp(numero, mensagem);
     }
 
-    // Abre direto no app do WhatsApp; se não estiver instalado, cai no wa.me
+    // Tenta abrir o app direto; se não abrir em ~1,5s, cai no wa.me (que abre o app no celular)
     function abrirWhatsApp(numero, mensagem) {
       let num = String(numero || '').replace(/\D/g, '');
       if (!num.startsWith('55')) num = '55' + num;
@@ -190,14 +190,16 @@
       const urlApp = 'whatsapp://send?phone=' + num + '&text=' + texto;
       const urlFallback = 'https://wa.me/' + num + '?text=' + texto;
 
-      const win = window.open(urlApp, '_blank');
-      // Se o app não existe, a janela não abre → usa o wa.me como fallback
-      if (!win || win.closed || typeof win.closed === 'undefined') {
+      // 1) Tenta abrir o app nativo
+      window.location.href = urlApp;
+
+      // 2) Se o app não abriu (não instalado / bloqueado), usa o wa.me após 1,5s
+      setTimeout(function () {
         window.location.href = urlFallback;
-      }
+      }, 1500);
     }
 
-    // ===== Delegação de clique: captura o botão sem quebrar o HTML =====
+    // ===== Delegação de clique =====
     listaReservas.addEventListener('click', function (e) {
       const btn = e.target.closest('.btn-small');
       if (!btn) return;
