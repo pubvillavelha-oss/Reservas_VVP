@@ -122,7 +122,7 @@
 <div id="area-impressao"></div>
 
 <script>
-// ===== CONFIGURAÇÃO (mesma URL do index.html) =====
+// ===== CONFIGURAÇÃO =====
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwoINiSHHQhQt0jJqk_1Xy9E2uyXqNna5pB69F3GMfS-E74Pk0t_Sy3lGGYXzpBZEIpWg/exec';
 
 let todasReservas = [];
@@ -142,7 +142,6 @@ function campo(reg, chaves) {
   return '';
 }
 
-// Aceita dd/mm/aaaa ou aaaa-mm-dd
 function normalizarData(valor) {
   const s = String(valor ?? '').trim();
   if (!s) return '';
@@ -169,13 +168,11 @@ function formatarDataBr(data) {
   return s;
 }
 
-// ===== Busca na API — MESMO padrão do index.html =====
+// ===== Busca na API =====
 async function buscarReservas() {
   const msg = document.getElementById('msg');
   msg.className = 'msg'; msg.textContent = '';
   const busca = document.getElementById('filtro-nome').value.trim();
-
-  // Monta a URL exatamente como o index.html faz (busca + status)
   const url = APPS_SCRIPT_URL + '?busca=' + encodeURIComponent(busca) + '&status=';
 
   try {
@@ -197,7 +194,7 @@ async function buscarReservas() {
   }
 }
 
-// ===== Filtro por data (no cliente, pois o doGet não filtra por data) =====
+// ===== Filtro por data (no cliente) =====
 function aplicarFiltros() {
   const dataAlvo = normalizarData(document.getElementById('filtro-data').value);
   reservasFiltradas = todasReservas.filter(r => {
@@ -215,11 +212,17 @@ function limparFiltros() {
   buscarReservas();
 }
 
-// ===== Lista lateral =====
+// ===== Lista lateral (com somatória de lugares) =====
 function renderizarLista() {
   const corpo = document.getElementById('corpo-lista');
-  document.getElementById('titulo-lista').textContent = 'Reservas (' + reservasFiltradas.length + ')';
-  document.getElementById('btn-todas').textContent = '🖨️ Imprimir todas (' + reservasFiltradas.length + ')';
+  // Somatória de lugares das reservas filtradas (data selecionada ou todas)
+  const totalLugares = reservasFiltradas.reduce(function (soma, r) {
+    return soma + (parseInt(campo(r,['lugares','Lugares']), 10) || 0);
+  }, 0);
+  document.getElementById('titulo-lista').textContent =
+    'Reservas (' + reservasFiltradas.length + ') · Lugares (' + totalLugares + ')';
+  document.getElementById('btn-todas').textContent =
+    '🖨️ Imprimir todas (' + reservasFiltradas.length + ')';
   if (!reservasFiltradas.length) {
     corpo.innerHTML = '<p style="font-size:13px;color:#5f6368;">Nenhuma reserva para a seleção.</p>';
     return;
@@ -265,7 +268,7 @@ function atualizarPreview() {
   atualizarDetalhes(r);
 }
 
-// ===== Cupom (layout exigido: RESERVADO PARA > NOME > LUGARES) =====
+// ===== Cupom (RESERVADO PARA > NOME > LUGARES) =====
 function gerarCupomHtml(r) {
   const nome = (campo(r,['nome','Nome']) || 'SEM NOME').toUpperCase();
   const qtd = parseInt(campo(r,['lugares','Lugares']), 10) || 0;
