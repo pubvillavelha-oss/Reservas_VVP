@@ -113,8 +113,11 @@
           const statusLabel = r.status === 'Realizada' ? 'Realizada' : 'Pendente';
           let actionsHtml = '';
           if (r.status !== 'Realizada') {
-            // Passa nome e telefone para o fluxo de marcação + WhatsApp
-            actionsHtml = '<button class="btn btn-small" onclick="marcarRealizada(' + r.linha + ', ' + JSON.stringify(r.nome || '') + ', ' + JSON.stringify(r.telefone || '') + ')">✅ Marcar como Realizada</button>';
+            // Dados guardados em atributos data-* (evita quebra do HTML com aspas)
+            actionsHtml = '<button class="btn btn-small" data-linha="' + r.linha +
+              '" data-nome="' + encodeURIComponent(r.nome || '') +
+              '" data-telefone="' + encodeURIComponent(r.telefone || '') +
+              '">✅ Marcar como Realizada</button>';
           }
           const mesaInfo = (r.status === 'Realizada' && r.mesa) ? ' · 🪑 Reservado a Mesa <strong>' + r.mesa + '</strong>' : '';
           item.innerHTML =
@@ -160,7 +163,6 @@
       })
       .then(function () {
         carregarReservas();
-        // Após marcar como realizada, dispara o fluxo de envio via WhatsApp
         enviarWhatsApp(telefone, nome, mesaNum);
       })
       .catch(function () {
@@ -170,27 +172,31 @@
 
     // ===== Envio via WhatsApp (usa o WhatsApp do próprio celular) =====
     function enviarWhatsApp(numero, nome, mesa) {
-      // 1. Pergunta se deseja enviar a mensagem
       const desejaEnviar = confirm('Deseja enviar a mensagem de confirmação via WhatsApp para ' + (nome || 'o cliente') + '?');
       if (!desejaEnviar) return;
 
-      // 2. Pergunta se o número do cliente é válido
       const numeroValido = confirm('O número ' + (numero || '-') + ' está correto e é válido?');
       if (!numeroValido) return;
 
-      // 3. Normaliza o número: remove tudo que não é dígito
       let num = String(numero || '').replace(/\D/g, '');
-
-      // 4. Garante o código do país +55 (Brasil)
       if (!num.startsWith('55')) {
         num = '55' + num;
       }
 
-      // 5. Monta a mensagem e abre o WhatsApp do celular
       const mensagem = 'Olá Villeiro(a) ' + (nome || '') + ' reservamos a ' + mesa + ' para você!';
       const url = 'https://wa.me/' + num + '?text=' + encodeURIComponent(mensagem);
       window.open(url, '_blank');
     }
+
+    // ===== Delegação de clique: captura o botão sem quebrar o HTML =====
+    listaReservas.addEventListener('click', function (e) {
+      const btn = e.target.closest('.btn-small');
+      if (!btn) return;
+      const linha = btn.getAttribute('data-linha');
+      const nome = decodeURIComponent(btn.getAttribute('data-nome') || '');
+      const telefone = decodeURIComponent(btn.getAttribute('data-telefone') || '');
+      marcarRealizada(linha, nome, telefone);
+    });
 
     document.getElementById('btnBuscar').addEventListener('click', carregarReservas);
     buscaInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') carregarReservas(); });
