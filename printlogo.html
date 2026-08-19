@@ -38,9 +38,8 @@
   .preview h2 { font-size: 14px; margin: 0 0 10px; }
   #preview-cupom { width: 72mm; margin: 0 auto; border: 1px dashed #ccc; padding: 6mm 3mm; text-align: center; font-family: 'Courier New', Courier, monospace; background: #fff; }
 
-  /* ===== NOVO LAYOUT DO CUPOM ===== */
+  /* ===== LAYOUT DO CUPOM ===== */
   .cupom .cabecalho { margin-bottom: 3mm; }
-  .cupom .logo { font-size: 16pt; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; color: #111; }
   .cupom .sub-logo { font-size: 9pt; color: #555; margin-top: 1mm; }
   .cupom .separador { border-top: 1px dashed #555; margin: 2.5mm 0; }
   .cupom .rotulo { font-size: 12pt; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-top: 2mm; }
@@ -50,6 +49,10 @@
   .cupom .dado-linha strong { font-weight: 700; }
   .cupom .observacao { font-size: 10pt; margin-top: 2mm; text-align: left; text-transform: uppercase; }
   .cupom .observacao .titulo { font-weight: 700; }
+  /* Espaço de 3 cm antes do traço final */
+  .cupom .espaco-final { height: 3cm; }
+  /* Traço finalizando o cupom */
+  .cupom .traco-final { border-top: 1px solid #000; width: 100%; }
 
   .detalhes { margin-top: 12px; font-size: 13px; }
   .detalhes table { width: 100%; border-collapse: collapse; }
@@ -111,7 +114,7 @@
       <div id="preview-cupom">
         <div class="cupom">
           <div class="cabecalho">
-            <div class="logo">Villa Velha Pub</div>
+            <img src="https://raw.githubusercontent.com/pubvillavelha-oss/Reservas_VVP/main/VVP.png" alt="Villa Velha Pub" style="max-width:50mm; max-height:15mm;">
             <div class="sub-logo">Reserva de Mesas</div>
           </div>
           <div class="separador"></div>
@@ -120,6 +123,8 @@
           <div class="separador"></div>
           <div class="lugares">—</div>
           <div class="observacao">—</div>
+          <div class="espaco-final"></div>
+          <div class="traco-final"></div>
         </div>
       </div>
     </div>
@@ -285,7 +290,7 @@ function atualizarPreview() {
   atualizarDetalhes(r);
 }
 
-// ===== NOVO CUPOM: logomarca no topo > nome > demais dados =====
+// ===== CUPOM: logomarca no topo > nome > dados (sem telefone) > obs > espaço 3cm > traço =====
 function gerarCupomHtml(r) {
   // Cabeçalho com a logomarca do pub
   var html = '<div class="cupom">' +
@@ -300,14 +305,15 @@ function gerarCupomHtml(r) {
       '<div class="nome">—</div>' +
       '<div class="separador"></div>' +
       '<div class="lugares">—</div>' +
-      '<div class="observacao">—</div></div>';
+      '<div class="observacao">—</div>' +
+      '<div class="espaco-final"></div>' +
+      '<div class="traco-final"></div></div>';
     return html;
   }
 
   const nome = (campo(r,['nome','Nome']) || 'SEM NOME').toUpperCase();
   const qtd = parseInt(campo(r,['lugares','Lugares']), 10) || 0;
   const textoLugares = qtd === 1 ? '1 LUGAR' : qtd + ' LUGARES';
-  const telefone = campo(r,['telefone','Telefone']);
   const data = formatarDataBr(campo(r,['data','Data']));
   const observacao = campo(r,['observacao','Observação','Observacao']);
 
@@ -316,15 +322,19 @@ function gerarCupomHtml(r) {
     '<div class="separador"></div>' +
     '<div class="lugares">' + textoLugares + '</div>';
 
-  if (telefone) html += '<div class="dado-linha">📞 <strong>' + escapar(telefone) + '</strong></div>';
+  // Data (telefone removido do cupom)
   if (data) html += '<div class="dado-linha">📅 <strong>' + escapar(data) + '</strong></div>';
 
+  // Observação se existir
   if (observacao) {
     html += '<div class="separador"></div>' +
       '<div class="observacao"><span class="titulo">Obs: </span>' + escapar(observacao) + '</div>';
   }
 
-  html += '</div>';
+  // Espaço de 3 cm + traço final
+  html += '<div class="espaco-final"></div>' +
+    '<div class="traco-final"></div>' +
+    '</div>';
   return html;
 }
 
