@@ -79,7 +79,7 @@
     <label for="filtro-nome">Nome ou telefone</label>
     <input type="text" id="filtro-nome" placeholder="Ex.: João ou 77 99999">
   </div>
-  <button onclick="aplicarFiltros()">Buscar</button>
+  <button onclick="buscarReservas()">Buscar</button>
   <button class="secundario" onclick="limparFiltros()">Limpar</button>
 </div>
 
@@ -122,8 +122,8 @@
 <div id="area-impressao"></div>
 
 <script>
-// ===== CONFIGURAÇÃO =====
-const API_URL = 'https://script.google.com/macros/s/AKfycbwoINiSHHQhQt0jJqk_1Xy9E2uyXqNna5pB69F3GMfS-E74Pk0t_Sy3lGGYXzpBZEIpWg/exec';
+// ===== CONFIGURAÇÃO (mesma URL do index.html) =====
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwoINiSHHQhQt0jJqk_1Xy9E2uyXqNna5pB69F3GMfS-E74Pk0t_Sy3lGGYXzpBZEIpWg/exec';
 
 let todasReservas = [];
 let reservasFiltradas = [];
@@ -134,7 +134,6 @@ function escapar(t) {
   return String(t ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// Lê campo aceitando variações de nome (data/nome/telefone/lugares/motivo/observacao/status)
 function campo(reg, chaves) {
   for (const c of chaves) {
     const v = reg[c];
@@ -152,7 +151,7 @@ function normalizarData(valor) {
     let a = m[3]; if (a.length === 2) a = '20' + a;
     return a + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
   }
-  m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
   if (m) return m[1] + '-' + m[2].padStart(2,'0') + '-' + m[3].padStart(2,'0');
   return s;
 }
@@ -170,26 +169,26 @@ function formatarDataBr(data) {
   return s;
 }
 
-// ===== Busca na API (usa o parâmetro "busca" do seu doGet) =====
+// ===== Busca na API — MESMO padrão do index.html =====
 async function buscarReservas() {
   const msg = document.getElementById('msg');
   msg.className = 'msg'; msg.textContent = '';
-  try {
-    // Monta a URL com o filtro de busca (nome/telefone) que seu doGet já suporta
-    const termo = document.getElementById('filtro-nome').value.trim();
-    let url = API_URL;
-    if (termo) url += '?busca=' + encodeURIComponent(termo);
+  const busca = document.getElementById('filtro-nome').value.trim();
 
+  // Monta a URL exatamente como o index.html faz (busca + status)
+  const url = APPS_SCRIPT_URL + '?busca=' + encodeURIComponent(busca) + '&status=';
+
+  try {
     const resp = await fetch(url);
     const texto = await resp.text();
     let dados;
     try { dados = JSON.parse(texto); }
-    catch (e) { throw new Error('Resposta não é JSON válido. Resposta bruta: ' + texto.slice(0,200)); }
+    catch (e) { throw new Error('Resposta não é JSON. Bruta: ' + texto.slice(0,200)); }
 
     todasReservas = Array.isArray(dados) ? dados : [];
     if (!todasReservas.length) {
       msg.className = 'msg erro';
-      msg.textContent = 'Nenhuma reserva encontrada. Verifique se o web app está publicado como "Qualquer pessoa".';
+      msg.textContent = 'Nenhuma reserva encontrada.';
     }
     aplicarFiltros();
   } catch (erro) {
@@ -198,7 +197,7 @@ async function buscarReservas() {
   }
 }
 
-// ===== Filtros (data é filtrada no cliente) =====
+// ===== Filtro por data (no cliente, pois o doGet não filtra por data) =====
 function aplicarFiltros() {
   const dataAlvo = normalizarData(document.getElementById('filtro-data').value);
   reservasFiltradas = todasReservas.filter(r => {
