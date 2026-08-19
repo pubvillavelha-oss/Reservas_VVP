@@ -86,19 +86,16 @@
   <script>
     // ===== Configuração =====
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyQgdPbxLYCTl_X1A1-wN8NmrGHkRyKJR6xeOrCopBXS1JujMFAeoonhBNMnLlM1llEbw/exec';
-
     const listaReservas = document.getElementById('listaReservas');
     const loadingConsulta = document.getElementById('loadingConsulta');
     const buscaInput = document.getElementById('buscaInput');
     const filtroStatus = document.getElementById('filtroStatus');
-
     function carregarReservas() {
       loadingConsulta.style.display = 'block';
       listaReservas.innerHTML = '';
       const busca = buscaInput.value.trim();
       const status = filtroStatus.value;
       const url = APPS_SCRIPT_URL + '?busca=' + encodeURIComponent(busca) + '&status=' + encodeURIComponent(status);
-
       fetch(url)
       .then(function (r) { return r.json(); })
       .then(function (reservas) {
@@ -117,15 +114,15 @@
           if (r.status !== 'Realizada') {
             actionsHtml = '<button class="btn btn-small" onclick="marcarRealizada(' + r.linha + ')">✅ Marcar como Realizada</button>';
           }
-          // Mostra a mesa se a reserva já foi realizada e tem mesa registrada
-          const mesaInfo = (r.status === 'Realizada' && r.mesa) ? ' · 🪑 Mesa <strong>' + r.mesa + '</strong>' : '';
+          // Mesa aparece logo após os lugares, com a mensagem "Reservado a Mesa"
+          const mesaInfo = (r.status === 'Realizada' && r.mesa) ? ' · 🪑 Reservado a Mesa <strong>' + r.mesa + '</strong>' : '';
           item.innerHTML =
             '<div class="head">' +
               '<span class="nome">' + (r.nome || 'Sem nome') + '</span>' +
               '<span class="badge ' + statusClass + '">' + statusLabel + '</span>' +
             '</div>' +
-            '<div class="info">📅 <strong>' + (r.data || '-') + '</strong> · 👥 <strong>' + (r.lugares || '-') + '</strong> lugares</div>' +
-            '<div class="info">📞 <strong>' + (r.telefone || '-') + '</strong> · 📋 <strong>' + (r.motivo || '-') + '</strong>' + mesaInfo + '</div>' +
+            '<div class="info">📅 <strong>' + (r.data || '-') + '</strong> · 👥 <strong>' + (r.lugares || '-') + '</strong> lugares' + mesaInfo + '</div>' +
+            '<div class="info">📞 <strong>' + (r.telefone || '-') + '</strong> · 📋 <strong>' + (r.motivo || '-') + '</strong></div>' +
             (r.observacao ? '<div class="info">💬 <strong>' + r.observacao + '</strong></div>' : '') +
             (actionsHtml ? '<div class="actions">' + actionsHtml + '</div>' : '');
           listaReservas.appendChild(item);
@@ -136,7 +133,6 @@
         listaReservas.innerHTML = '<div class="empty-msg">Erro ao carregar reservas. Verifique a URL do Apps Script.</div>';
       });
     }
-
     function atualizarStats(reservas) {
       const pendentes = reservas.filter(function (r) { return r.status !== 'Realizada'; }).length;
       const realizadas = reservas.filter(function (r) { return r.status === 'Realizada'; }).length;
@@ -144,18 +140,15 @@
       document.getElementById('totalPendentes').textContent = pendentes;
       document.getElementById('totalRealizadas').textContent = realizadas;
     }
-
     function marcarRealizada(linha) {
-      // Solicita o número da mesa antes de confirmar
       const mesa = prompt('Informe o número da mesa para esta reserva:');
-      if (mesa === null) return; // usuário cancelou
+      if (mesa === null) return;
       const mesaNum = mesa.trim();
       if (!mesaNum) {
         alert('Informe o número da mesa para continuar.');
         return;
       }
       if (!confirm('Marcar esta reserva como realizada na mesa ' + mesaNum + '?')) return;
-
       fetch(APPS_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
@@ -169,11 +162,9 @@
         alert('Erro ao atualizar a reserva.');
       });
     }
-
     document.getElementById('btnBuscar').addEventListener('click', carregarReservas);
     buscaInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') carregarReservas(); });
     filtroStatus.addEventListener('change', carregarReservas);
-
     carregarReservas();
   </script>
 </body>
