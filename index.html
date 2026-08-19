@@ -20,7 +20,6 @@
     .logo h1 { font-size: 26px; letter-spacing: 2px; color: #e0b84d; text-transform: uppercase; }
     .logo p { margin-top: 4px; font-size: 14px; color: #b89a6a; }
     .divider { border: none; border-top: 1px solid #c9a227; opacity: 0.4; margin: 18px 0 22px; }
-
     .toolbar { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
     .toolbar input { flex: 1; min-width: 180px; }
     input, select {
@@ -30,7 +29,6 @@
     select { cursor: pointer; }
     input:focus, select:focus { outline: none; border-color: #e0b84d; }
     input::placeholder { color: #7a6a55; }
-
     .btn {
       padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 1px;
       text-transform: uppercase; color: #1a0f0a; background: linear-gradient(135deg, #e0b84d, #c9a227);
@@ -38,7 +36,6 @@
     }
     .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(224,184,77,0.3); }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
     .stats { display: flex; gap: 10px; margin-bottom: 18px; }
     .stat {
       flex: 1; text-align: center; background: #1a0f0a; border: 1px solid #6b4f2e;
@@ -46,7 +43,6 @@
     }
     .stat .num { font-size: 22px; font-weight: 700; color: #e0b84d; }
     .stat .label { font-size: 12px; color: #b89a6a; margin-top: 2px; }
-
     .loading { display: none; text-align: center; color: #e0b84d; font-weight: 600; margin: 15px 0; }
     .reserva-item {
       background: #1a0f0a; border: 1px solid #6b4f2e; border-radius: 10px; padding: 14px; margin-bottom: 10px;
@@ -70,7 +66,6 @@
       <p>Gestão de Reservas</p>
     </div>
     <hr class="divider">
-
     <div class="toolbar">
       <input type="text" id="buscaInput" placeholder="Buscar por nome ou telefone...">
       <select id="filtroStatus">
@@ -80,17 +75,14 @@
       </select>
       <button class="btn" id="btnBuscar">Buscar</button>
     </div>
-
     <div class="stats">
       <div class="stat"><div class="num" id="totalReservas">0</div><div class="label">Total</div></div>
       <div class="stat"><div class="num" id="totalPendentes">0</div><div class="label">Pendentes</div></div>
       <div class="stat"><div class="num" id="totalRealizadas">0</div><div class="label">Realizadas</div></div>
     </div>
-
     <div class="loading" id="loadingConsulta">Carregando reservas...</div>
     <div id="listaReservas"></div>
   </div>
-
   <script>
     // ===== Configuração =====
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwoINiSHHQhQt0jJqk_1Xy9E2uyXqNna5pB69F3GMfS-E74Pk0t_Sy3lGGYXzpBZEIpWg/exec';
@@ -125,13 +117,15 @@
           if (r.status !== 'Realizada') {
             actionsHtml = '<button class="btn btn-small" onclick="marcarRealizada(' + r.linha + ')">✅ Marcar como Realizada</button>';
           }
+          // Mostra a mesa se a reserva já foi realizada e tem mesa registrada
+          const mesaInfo = (r.status === 'Realizada' && r.mesa) ? ' · 🪑 Mesa <strong>' + r.mesa + '</strong>' : '';
           item.innerHTML =
             '<div class="head">' +
               '<span class="nome">' + (r.nome || 'Sem nome') + '</span>' +
               '<span class="badge ' + statusClass + '">' + statusLabel + '</span>' +
             '</div>' +
             '<div class="info">📅 <strong>' + (r.data || '-') + '</strong> · 👥 <strong>' + (r.lugares || '-') + '</strong> lugares</div>' +
-            '<div class="info">📞 <strong>' + (r.telefone || '-') + '</strong> · 📋 <strong>' + (r.motivo || '-') + '</strong></div>' +
+            '<div class="info">📞 <strong>' + (r.telefone || '-') + '</strong> · 📋 <strong>' + (r.motivo || '-') + '</strong>' + mesaInfo + '</div>' +
             (r.observacao ? '<div class="info">💬 <strong>' + r.observacao + '</strong></div>' : '') +
             (actionsHtml ? '<div class="actions">' + actionsHtml + '</div>' : '');
           listaReservas.appendChild(item);
@@ -152,12 +146,21 @@
     }
 
     function marcarRealizada(linha) {
-      if (!confirm('Marcar esta reserva como realizada?')) return;
+      // Solicita o número da mesa antes de confirmar
+      const mesa = prompt('Informe o número da mesa para esta reserva:');
+      if (mesa === null) return; // usuário cancelou
+      const mesaNum = mesa.trim();
+      if (!mesaNum) {
+        alert('Informe o número da mesa para continuar.');
+        return;
+      }
+      if (!confirm('Marcar esta reserva como realizada na mesa ' + mesaNum + '?')) return;
+
       fetch(APPS_SCRIPT_URL, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({ id: linha, status: 'Realizada' })
+        body: JSON.stringify({ id: linha, status: 'Realizada', mesa: mesaNum })
       })
       .then(function () {
         carregarReservas();
@@ -171,7 +174,6 @@
     buscaInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') carregarReservas(); });
     filtroStatus.addEventListener('change', carregarReservas);
 
-    // Carrega ao abrir
     carregarReservas();
   </script>
 </body>
