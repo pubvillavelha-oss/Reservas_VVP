@@ -7,20 +7,16 @@
 <style>
   * { box-sizing: border-box; }
   body { font-family: Arial, Helvetica, sans-serif; margin: 0; background: #f1f3f4; color: #202124; }
-
   .topo { background: #111; color: #fff; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; }
   .topo h1 { font-size: 18px; margin: 0; }
-
   .painel-filtros { background: #fff; padding: 14px 16px; display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
   .campo { display: flex; flex-direction: column; gap: 4px; }
   .campo label { font-size: 12px; font-weight: 700; color: #5f6368; }
   .campo input { padding: 8px 10px; border: 1px solid #dadce0; border-radius: 6px; font-size: 14px; }
-
   button { background: #1a73e8; color: #fff; border: 0; border-radius: 6px; padding: 9px 16px; font-size: 14px; font-weight: 700; cursor: pointer; }
   button:hover { opacity: .9; }
   button.secundario { background: #fff; color: #1a73e8; border: 1px solid #1a73e8; }
   button:disabled { opacity: .4; cursor: not-allowed; }
-
   .conteudo { display: flex; gap: 16px; padding: 16px; align-items: flex-start; flex-wrap: wrap; }
   .lista { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.15); padding: 12px; width: 320px; max-height: 70vh; overflow-y: auto; }
   .lista h2 { font-size: 14px; margin: 0 0 10px; }
@@ -29,17 +25,15 @@
   .item-reserva.ativo { background: #d2e3fc; }
   .item-reserva .nome-item { font-weight: 700; font-size: 13px; }
   .item-reserva .meta-item { font-size: 11px; color: #5f6368; margin-top: 2px; }
-
   .lado-direito { flex: 1; min-width: 340px; max-width: 480px; }
   .navegacao { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #fff; border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
   .contador { font-size: 13px; font-weight: 700; }
-
   .preview { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,.15); padding: 12px; margin-bottom: 12px; }
   .preview h2 { font-size: 14px; margin: 0 0 10px; }
   #preview-cupom { width: 72mm; margin: 0 auto; border: 1px dashed #ccc; padding: 6mm 3mm; text-align: center; font-family: 'Courier New', Courier, monospace; background: #fff; }
-
   /* ===== LAYOUT DO CUPOM ===== */
   .cupom .cabecalho { margin-bottom: 3mm; }
+  .cupom .logo { max-width: 70mm; max-height: 25mm; }
   .cupom .sub-logo { font-size: 9pt; color: #555; margin-top: 1mm; }
   .cupom .separador { border-top: 1px dashed #555; margin: 2.5mm 0; }
   .cupom .rotulo { font-size: 12pt; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-top: 2mm; }
@@ -49,20 +43,21 @@
   .cupom .dado-linha strong { font-weight: 700; }
   .cupom .observacao { font-size: 10pt; margin-top: 2mm; text-align: left; text-transform: uppercase; }
   .cupom .observacao .titulo { font-weight: 700; }
+  /* QR Code (após a observação) */
+  .cupom .qrcode { margin-top: 3mm; }
+  .cupom .qrcode img { max-width: 30mm; max-height: 30mm; }
+  .cupom .qrcode .legenda { font-size: 8pt; color: #555; margin-top: 1mm; text-transform: uppercase; }
   /* Espaço de 3 cm antes do traço final */
   .cupom .espaco-final { height: 3cm; }
   /* Traço finalizando o cupom */
   .cupom .traco-final { border-top: 1px solid #000; width: 100%; }
-
   .detalhes { margin-top: 12px; font-size: 13px; }
   .detalhes table { width: 100%; border-collapse: collapse; }
   .detalhes td { padding: 3px 0; border-bottom: 1px solid #eee; }
   .detalhes td:first-child { font-weight: 700; width: 110px; color: #5f6368; }
-
   .acoes { display: flex; gap: 10px; flex-wrap: wrap; }
   .msg { padding: 10px; border-radius: 6px; font-size: 13px; margin-bottom: 12px; display: none; }
   .msg.erro { background: #fce8e6; color: #c5221f; display: block; }
-
   @media print {
     @page { size: 80mm auto; margin: 0; }
     html, body { margin: 0; padding: 0; background: #fff; }
@@ -75,12 +70,10 @@
 </style>
 </head>
 <body>
-
 <div class="topo">
   <h1>Impressão de Reservas</h1>
   <button class="secundario" onclick="buscarReservas()">Atualizar dados</button>
 </div>
-
 <div class="painel-filtros">
   <div class="campo">
     <label for="filtro-data">Data</label>
@@ -93,28 +86,24 @@
   <button onclick="buscarReservas()">Buscar</button>
   <button class="secundario" onclick="limparFiltros()">Limpar</button>
 </div>
-
 <div class="conteudo">
   <div class="lista">
     <h2 id="titulo-lista">Reservas</h2>
     <div id="corpo-lista"></div>
   </div>
-
   <div class="lado-direito">
     <div class="msg" id="msg"></div>
-
     <div class="navegacao">
       <button id="btn-ant" onclick="navegar(-1)">◀ Anterior</button>
       <span class="contador" id="contador">0 de 0</span>
       <button id="btn-prox" onclick="navegar(1)">Próxima ▶</button>
     </div>
-
     <div class="preview">
       <h2>Pré-visualização do cupom</h2>
       <div id="preview-cupom">
         <div class="cupom">
           <div class="cabecalho">
-            <img src="https://raw.githubusercontent.com/pubvillavelha-oss/Reservas_VVP/main/VVP.png" alt="Villa Velha Pub" style="max-width:50mm; max-height:15mm;">
+            <img class="logo" src="https://raw.githubusercontent.com/pubvillavelha-oss/Reservas_VVP/main/VVP.png" alt="Villa Velha Pub">
             <div class="sub-logo">Reserva de Mesas</div>
           </div>
           <div class="separador"></div>
@@ -123,40 +112,39 @@
           <div class="separador"></div>
           <div class="lugares">—</div>
           <div class="observacao">—</div>
+          <div class="qrcode">
+            <img src="https://raw.githubusercontent.com/pubvillavelha-oss/Reservas_VVP/main/qrcode_reserva.png" alt="QR Code Reserva">
+            <div class="legenda">Garanta sua próxima reserva!</div>
+          </div>
           <div class="espaco-final"></div>
           <div class="traco-final"></div>
         </div>
       </div>
     </div>
-
     <div class="detalhes" id="detalhes"></div>
-
     <div class="acoes">
       <button onclick="imprimirAtual()">🖨️ Imprimir esta reserva</button>
       <button id="btn-todas" onclick="imprimirTodas()">🖨️ Imprimir todas (0)</button>
     </div>
   </div>
 </div>
-
 <div id="area-impressao"></div>
-
 <script>
 // ===== CONFIGURAÇÃO =====
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwoINiSHHQhQt0jJqk_1Xy9E2uyXqNna5pB69F3GMfS-E74Pk0t_Sy3lGGYXzpBZEIpWg/exec';
-
 // Logomarca do pub (URL raw do GitHub)
 const URL_LOGO = 'https://raw.githubusercontent.com/pubvillavelha-oss/Reservas_VVP/main/VVP.png';
+// QR Code de reserva (URL raw do GitHub)
+const URL_QRCODE = 'https://raw.githubusercontent.com/pubvillavelha-oss/Reservas_VVP/main/qrcode_reserva.png';
 const SUBTITULO_PUB = 'Reserva de Mesas';
-
+const LEGENDA_QRCODE = 'Garanta sua próxima reserva!';
 let todasReservas = [];
 let reservasFiltradas = [];
 let indiceAtual = 0;
-
 // ===== Utilitários =====
 function escapar(t) {
-  return String(t ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(t ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;');
 }
-
 function campo(reg, chaves) {
   for (const c of chaves) {
     const v = reg[c];
@@ -164,7 +152,6 @@ function campo(reg, chaves) {
   }
   return '';
 }
-
 function normalizarData(valor) {
   const s = String(valor ?? '').trim();
   if (!s) return '';
@@ -177,12 +164,10 @@ function normalizarData(valor) {
   if (m) return m[1] + '-' + m[2].padStart(2,'0') + '-' + m[3].padStart(2,'0');
   return s;
 }
-
 function hojeISO() {
   const d = new Date();
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
-
 function formatarDataBr(data) {
   const s = String(data ?? '').trim();
   if (!s) return '';
@@ -190,21 +175,18 @@ function formatarDataBr(data) {
   if (m) return m[3] + '/' + m[2] + '/' + m[1];
   return s;
 }
-
 // ===== Busca na API =====
 async function buscarReservas() {
   const msg = document.getElementById('msg');
   msg.className = 'msg'; msg.textContent = '';
   const busca = document.getElementById('filtro-nome').value.trim();
   const url = APPS_SCRIPT_URL + '?busca=' + encodeURIComponent(busca) + '&status=';
-
   try {
     const resp = await fetch(url);
     const texto = await resp.text();
     let dados;
     try { dados = JSON.parse(texto); }
     catch (e) { throw new Error('Resposta não é JSON. Bruta: ' + texto.slice(0,200)); }
-
     todasReservas = Array.isArray(dados) ? dados : [];
     if (!todasReservas.length) {
       msg.className = 'msg erro';
@@ -216,7 +198,6 @@ async function buscarReservas() {
     msg.textContent = 'Erro ao carregar: ' + erro.message;
   }
 }
-
 // ===== Filtro por data (no cliente) =====
 function aplicarFiltros() {
   const dataAlvo = normalizarData(document.getElementById('filtro-data').value);
@@ -228,13 +209,11 @@ function aplicarFiltros() {
   renderizarLista();
   atualizarPreview();
 }
-
 function limparFiltros() {
   document.getElementById('filtro-data').value = hojeISO();
   document.getElementById('filtro-nome').value = '';
   buscarReservas();
 }
-
 // ===== Lista lateral (com somatória de lugares) =====
 function renderizarLista() {
   const corpo = document.getElementById('corpo-lista');
@@ -259,7 +238,6 @@ function renderizarLista() {
     corpo.appendChild(div);
   });
 }
-
 // ===== Navegação =====
 function selecionar(i) {
   if (i < 0 || i >= reservasFiltradas.length) return;
@@ -267,9 +245,7 @@ function selecionar(i) {
   renderizarLista();
   atualizarPreview();
 }
-
 function navegar(dir) { selecionar(indiceAtual + dir); }
-
 // ===== Preview =====
 function atualizarPreview() {
   const contador = document.getElementById('contador');
@@ -289,55 +265,56 @@ function atualizarPreview() {
   document.getElementById('preview-cupom').innerHTML = gerarCupomHtml(r);
   atualizarDetalhes(r);
 }
-
-// ===== CUPOM: logomarca no topo > nome > dados (sem telefone) > obs > espaço 3cm > traço =====
+// ===== CUPOM: logomarca ampliada > nome > dados > obs > QR Code > espaço 3cm > traço =====
 function gerarCupomHtml(r) {
-  // Cabeçalho com a logomarca do pub
+  // Cabeçalho com a logomarca ampliada
   var html = '<div class="cupom">' +
     '<div class="cabecalho">' +
-      '<img src="' + URL_LOGO + '" alt="Villa Velha Pub" style="max-width:50mm; max-height:15mm;">' +
+      '<img class="logo" src="' + URL_LOGO + '" alt="Villa Velha Pub">' +
       '<div class="sub-logo">' + escapar(SUBTITULO_PUB) + '</div>' +
     '</div>' +
     '<div class="separador"></div>';
-
   if (!r) {
     html += '<div class="rotulo">Reservado para</div>' +
       '<div class="nome">—</div>' +
       '<div class="separador"></div>' +
       '<div class="lugares">—</div>' +
       '<div class="observacao">—</div>' +
+      '<div class="qrcode">' +
+        '<img src="' + URL_QRCODE + '" alt="QR Code Reserva">' +
+        '<div class="legenda">' + escapar(LEGENDA_QRCODE) + '</div>' +
+      '</div>' +
       '<div class="espaco-final"></div>' +
       '<div class="traco-final"></div></div>';
     return html;
   }
-
   const nome = (campo(r,['nome','Nome']) || 'SEM NOME').toUpperCase();
   const qtd = parseInt(campo(r,['lugares','Lugares']), 10) || 0;
   const textoLugares = qtd === 1 ? '1 LUGAR' : qtd + ' LUGARES';
   const data = formatarDataBr(campo(r,['data','Data']));
   const observacao = campo(r,['observacao','Observação','Observacao']);
-
   html += '<div class="rotulo">Reservado para</div>' +
     '<div class="nome">' + escapar(nome) + '</div>' +
     '<div class="separador"></div>' +
     '<div class="lugares">' + textoLugares + '</div>';
-
   // Data (telefone removido do cupom)
   if (data) html += '<div class="dado-linha">📅 <strong>' + escapar(data) + '</strong></div>';
-
   // Observação se existir
   if (observacao) {
     html += '<div class="separador"></div>' +
       '<div class="observacao"><span class="titulo">Obs: </span>' + escapar(observacao) + '</div>';
   }
-
+  // QR Code logo após a observação
+  html += '<div class="qrcode">' +
+    '<img src="' + URL_QRCODE + '" alt="QR Code Reserva">' +
+    '<div class="legenda">' + escapar(LEGENDA_QRCODE) + '</div>' +
+  '</div>';
   // Espaço de 3 cm + traço final
   html += '<div class="espaco-final"></div>' +
     '<div class="traco-final"></div>' +
     '</div>';
   return html;
 }
-
 function atualizarDetalhes(r) {
   const qtd = parseInt(campo(r,['lugares','Lugares']), 10) || 0;
   document.getElementById('detalhes').innerHTML =
@@ -350,27 +327,23 @@ function atualizarDetalhes(r) {
     '<tr><td>Status</td><td>' + escapar(campo(r,['status','Status'])) + '</td></tr>' +
     '</table>';
 }
-
 // ===== Impressão =====
 function imprimirAtual() {
   if (!reservasFiltradas.length) { mostrarAviso('Nenhuma reserva para imprimir.'); return; }
   document.getElementById('area-impressao').innerHTML = gerarCupomHtml(reservasFiltradas[indiceAtual]);
   window.print();
 }
-
 function imprimirTodas() {
   if (!reservasFiltradas.length) { mostrarAviso('Nenhuma reserva para imprimir.'); return; }
   const html = reservasFiltradas.map(r => gerarCupomHtml(r)).join('<div class="corte">- - - - - - - - - - - - - - -</div>');
   document.getElementById('area-impressao').innerHTML = html;
   window.print();
 }
-
 function mostrarAviso(texto) {
   const msg = document.getElementById('msg');
   msg.className = 'msg erro';
   msg.textContent = texto;
 }
-
 // ===== Inicialização =====
 document.getElementById('filtro-data').value = hojeISO();
 buscarReservas();
