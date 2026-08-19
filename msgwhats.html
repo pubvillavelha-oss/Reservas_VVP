@@ -113,7 +113,6 @@
           const statusLabel = r.status === 'Realizada' ? 'Realizada' : 'Pendente';
           let actionsHtml = '';
           if (r.status !== 'Realizada') {
-            // Dados guardados em atributos data-* (evita quebra do HTML com aspas)
             actionsHtml = '<button class="btn btn-small" data-linha="' + r.linha +
               '" data-nome="' + encodeURIComponent(r.nome || '') +
               '" data-telefone="' + encodeURIComponent(r.telefone || '') +
@@ -170,7 +169,7 @@
       });
     }
 
-    // ===== Envio via WhatsApp (usa o WhatsApp do próprio celular) =====
+    // ===== Envio via WhatsApp (abre o APP do celular, não o navegador) =====
     function enviarWhatsApp(numero, nome, mesa) {
       const desejaEnviar = confirm('Deseja enviar a mensagem de confirmação via WhatsApp para ' + (nome || 'o cliente') + '?');
       if (!desejaEnviar) return;
@@ -178,14 +177,24 @@
       const numeroValido = confirm('O número ' + (numero || '-') + ' está correto e é válido?');
       if (!numeroValido) return;
 
-      let num = String(numero || '').replace(/\D/g, '');
-      if (!num.startsWith('55')) {
-        num = '55' + num;
-      }
-
       const mensagem = 'Olá Villeiro(a) ' + (nome || '') + ' reservamos a ' + mesa + ' para você!';
-      const url = 'https://wa.me/' + num + '?text=' + encodeURIComponent(mensagem);
-      window.open(url, '_blank');
+      abrirWhatsApp(numero, mensagem);
+    }
+
+    // Abre direto no app do WhatsApp; se não estiver instalado, cai no wa.me
+    function abrirWhatsApp(numero, mensagem) {
+      let num = String(numero || '').replace(/\D/g, '');
+      if (!num.startsWith('55')) num = '55' + num;
+
+      const texto = encodeURIComponent(mensagem);
+      const urlApp = 'whatsapp://send?phone=' + num + '&text=' + texto;
+      const urlFallback = 'https://wa.me/' + num + '?text=' + texto;
+
+      const win = window.open(urlApp, '_blank');
+      // Se o app não existe, a janela não abre → usa o wa.me como fallback
+      if (!win || win.closed || typeof win.closed === 'undefined') {
+        window.location.href = urlFallback;
+      }
     }
 
     // ===== Delegação de clique: captura o botão sem quebrar o HTML =====
