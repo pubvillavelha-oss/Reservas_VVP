@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Villa Velha Pub — Gestão de Reservas</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a0f0a 0%, #3a2413 50%, #1a0f0a 100%);
+      min-height: 100vh; padding: 20px; color: #f5e9dc;
+      display: flex; align-items: flex-start; justify-content: center;
+    }
+    .card {
+      background: #2b1a0e; border: 1px solid #c9a227; border-radius: 16px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6); width: 100%; max-width: 780px; padding: 35px;
+    }
+    .logo { text-align: center; margin-bottom: 25px; }
+    .logo h1 { font-size: 26px; letter-spacing: 2px; color: #e0b84d; text-transform: uppercase; }
+    .logo p { margin-top: 4px; font-size: 14px; color: #b89a6a; }
+    .divider { border: none; border-top: 1px solid #c9a227; opacity: 0.4; margin: 18px 0 22px; }
+    .toolbar { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; }
+    .toolbar input[type="text"] { flex: 1; min-width: 150px; }
+    .toolbar .date-range { display: flex; gap: 6px; align-items: center; }
+    .toolbar .date-range input[type="date"] { min-width: 130px; }
+    .toolbar .date-range span { color: #b89a6a; font-size: 13px; }
+    input, select {
+      padding: 12px 14px; font-size: 15px; border: 1px solid #6b4f2e;
+      border-radius: 8px; background: #1a0f0a; color: #f5e9dc; transition: border-color 0.2s;
+    }
+    input[type="date"] { color-scheme: dark; }
+    select { cursor: pointer; }
+    input:focus, select:focus { outline: none; border-color: #e0b84d; }
+    input::placeholder { color: #7a6a55; }
+    .btn {
+      padding: 12px 20px; font-size: 14px; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; color: #1a0f0a; background: linear-gradient(135deg, #e0b84d, #c9a227);
+      border: none; border-radius: 8px; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(224,184,77,0.3); }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-outline { background: transparent; color: #e0b84d; border: 1px solid #c9a227; }
+    .btn-outline:hover { box-shadow: none; background: rgba(224,184,77,0.1); }
+    .stats { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+    .stat {
+      flex: 1; min-width: 100px; text-align: center; background: #1a0f0a; border: 1px solid #6b4f2e;
+      border-radius: 10px; padding: 12px;
+    }
+    .stat .num { font-size: 22px; font-weight: 700; color: #e0b84d; }
+    .stat .label { font-size: 12px; color: #b89a6a; margin-top: 2px; }
+    .stat .num.pendente { color: #d4a94a; }
+    .stat .num.realizada { color: #a5d6a7; }
+    .loading { display: none; text-align: center; color: #e0b84d; font-weight: 600; margin: 15px 0; }
+    .reserva-item {
+      background: #1a0f0a; border: 1px solid #6b4f2e; border-radius: 10px; padding: 14px; margin-bottom: 10px;
+    }
+    .reserva-item .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .reserva-item .nome { font-weight: 700; color: #e0b84d; font-size: 16px; }
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+    .badge.pendente { background: #5a4632; color: #f5e9dc; }
+    .badge.realizada { background: #1d3a24; color: #a5d6a7; border: 1px solid #4caf50; }
+    .reserva-item .info { font-size: 13px; color: #b89a6a; margin-bottom: 4px; }
+    .reserva-item .info strong { color: #f5e9dc; }
+    .reserva-item .actions { margin-top: 10px; }
+    .btn-small { padding: 8px 14px; font-size: 13px; }
+    .empty-msg { text-align: center; color: #b89a6a; padding: 30px 0; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">
+      <h1>🍺 Villa Velha Pub</h1>
+      <p>Gestão de Reservas</p>
+    </div>
+    <hr class="divider">
+    <div class="toolbar">
+      <input type="text" id="buscaInput" placeholder="Buscar por nome ou telefone...">
+      <div class="date-range">
+        <input type="date" id="dataInicio" title="Data inicial">
+        <span>até</span>
+        <input type="date" id="dataFim" title="Data final">
+      </div>
+      <select id="filtroStatus">
+        <option value="">Todos os status</option>
+        <option value="Pendente">Pendentes</option>
+        <option value="Realizada">Realizadas</option>
+      </select>
+      <button class="btn" id="btnBuscar">Buscar</button>
+      <button class="btn btn-outline" id="btnLimpar">Limpar</button>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="num" id="totalReservas">0</div><div class="label">Total</div></div>
+      <div class="stat"><div class="num" id="totalPendentes">0</div><div class="label">Pendentes</div></div>
+      <div class="stat"><div class="num" id="totalRealizadas">0</div><div class="label">Realizadas</div></div>
+      <div class="stat"><div class="num pendente" id="totalLugaresPendentes">0</div><div class="label">Lugares Pend.</div></div>
+      <div class="stat"><div class="num realizada" id="totalLugaresRealizadas">0</div><div class="label">Lugares Real.</div></div>
+    </div>
+    <div class="loading" id="loadingConsulta">Carregando reservas...</div>
+    <div id="listaReservas"></div>
+  </div>
+  <script>
+    // ===== Configuração =====
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyQgdPbxLYCTl_X1A1-wN8NmrGHkRyKJR6xeOrCopBXS1JujMFAeoonhBNMnLlM1llEbw/exec';
+    const listaReservas = document.getElementById('listaReservas');
+    const loadingConsulta = document.getElementById('loadingConsulta');
+    const buscaInput = document.getElementById('buscaInput');
+    const filtroStatus = document.getElementById('filtroStatus');
+    const dataInicio = document.getElementById('dataInicio');
+    const dataFim = document.getElementById('dataFim');
+
+    // Converte qualquer formato para DD/MM/AAAA (ISO, AAAA-MM-DD, AAAA-MM-DD HH:MM, DD/MM/AAAA)
+    function formatarData(valor) {
+      if (!valor) return '-';
+      var s = String(valor).trim();
+      var parte = s.split('T')[0].split(' ')[0]; // ignora hora/ISO
+      var partes = parte.split('-');
+      if (partes.length === 3 && partes[0].length === 4) {
+        return partes[2] + '/' + partes[1] + '/' + partes[0];
+      }
+      var m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+      if (m) return m[1] + '/' + m[2] + '/' + m[3];
+      return s;
+    }
+
+    function carregarReservas() {
+      loadingConsulta.style.display = 'block';
+      listaReservas.innerHTML = '';
+      const busca = buscaInput.value.trim();
+      const status = filtroStatus.value;
+      const ini = dataInicio.value;
+      const fim = dataFim.value;
+
+      let url = APPS_SCRIPT_URL + '?busca=' + encodeURIComponent(busca) + '&status=' + encodeURIComponent(status);
+      if (ini) url += '&dataInicio=' + encodeURIComponent(ini);
+      if (fim) url += '&dataFim=' + encodeURIComponent(fim);
+
+      fetch(url)
+      .then(function (r) { return r.json(); })
+      .then(function (reservas) {
+        loadingConsulta.style.display = 'none';
+        atualizarStats(reservas);
+        if (!reservas.length) {
+          listaReservas.innerHTML = '<div class="empty-msg">Nenhuma reserva encontrada.</div>';
+          return;
+        }
+        reservas.forEach(function (r) {
+          const item = document.createElement('div');
+          item.className = 'reserva-item';
+          const statusClass = r.status === 'Realizada' ? 'realizada' : 'pendente';
+          const statusLabel = r.status === 'Realizada' ? 'Realizada' : 'Pendente';
+          let actionsHtml = '';
+          if (r.status !== 'Realizada') {
+            actionsHtml = '<button class="btn btn-small" onclick="marcarRealizada(' + r.linha + ')">✅ Marcar como Realizada</button>';
+          }
+          const mesaInfo = (r.status === 'Realizada' && r.mesa) ? ' · 🪑 Reservado a Mesa <strong>' + r.mesa + '</strong>' : '';
+          item.innerHTML =
+            '<div class="head">' +
+              '<span class="nome">' + (r.nome || 'Sem nome') + '</span>' +
+              '<span class="badge ' + statusClass + '">' + statusLabel + '</span>' +
+            '</div>' +
+            '<div class="info">📅 <strong>' + formatarData(r.data) + '</strong> · 👥 <strong>' + (r.lugares || '-') + '</strong> lugares' + mesaInfo + '</div>' +
+            '<div class="info">📞 <strong>' + (r.telefone || '-') + '</strong> · 📋 <strong>' + (r.motivo || '-') + '</strong></div>' +
+            (r.observacao ? '<div class="info">💬 <strong>' + r.observacao + '</strong></div>' : '') +
+            (actionsHtml ? '<div class="actions">' + actionsHtml + '</div>' : '');
+          listaReservas.appendChild(item);
+        });
+      })
+      .catch(function () {
+        loadingConsulta.style.display = 'none';
+        listaReservas.innerHTML = '<div class="empty-msg">Erro ao carregar reservas. Verifique a URL do Apps Script.</div>';
+      });
+    }
+
+    function atualizarStats(reservas) {
+      const pendentes = reservas.filter(function (r) { return r.status !== 'Realizada'; });
+      const realizadas = reservas.filter(function (r) { return r.status === 'Realizada'; });
+      const somaLugares = function (lista) {
+        return lista.reduce(function (acc, r) {
+          return acc + (parseInt(r.lugares, 10) || 0);
+        }, 0);
+      };
+      document.getElementById('totalReservas').textContent = reservas.length;
+      document.getElementById('totalPendentes').textContent = pendentes.length;
+      document.getElementById('totalRealizadas').textContent = realizadas.length;
+      document.getElementById('totalLugaresPendentes').textContent = somaLugares(pendentes);
+      document.getElementById('totalLugaresRealizadas').textContent = somaLugares(realizadas);
+    }
+
+    function limparFiltros() {
+      buscaInput.value = '';
+      filtroStatus.value = '';
+      dataInicio.value = '';
+      dataFim.value = '';
+      carregarReservas();
+    }
+
+    function marcarRealizada(linha) {
+      const mesa = prompt('Informe o número da mesa para esta reserva:');
+      if (mesa === null) return;
+      const mesaNum = mesa.trim();
+      if (!mesaNum) {
+        alert('Informe o número da mesa para continuar.');
+        return;
+      }
+      if (!confirm('Marcar esta reserva como realizada na mesa ' + mesaNum + '?')) return;
+      fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({ id: linha, status: 'Realizada', mesa: mesaNum })
+      })
+      .then(function () {
+        carregarReservas();
+      })
+      .catch(function () {
+        alert('Erro ao atualizar a reserva.');
+      });
+    }
+
+    document.getElementById('btnBuscar').addEventListener('click', carregarReservas);
+    document.getElementById('btnLimpar').addEventListener('click', limparFiltros);
+    buscaInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') carregarReservas(); });
+    filtroStatus.addEventListener('change', carregarReservas);
+    dataInicio.addEventListener('change', carregarReservas);
+    dataFim.addEventListener('change', carregarReservas);
+    carregarReservas();
+  </script>
+</body>
+</html>
