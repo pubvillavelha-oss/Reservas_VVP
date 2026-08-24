@@ -25,19 +25,20 @@
 
   .mesa {
     position: absolute;
-    width: 34px; height: 34px;
+    width: 30px; height: 30px;
     border-radius: 50%;
     transform: translate(-50%, -50%);
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    font-weight: bold; font-size: 11px; color: #fff;
-    background: rgba(0, 140, 255, 0.55);
+    font-weight: bold; font-size: 10px; color: #fff;
+    background: rgba(0, 140, 255, 0.6);
     border: 2px solid #fff;
     transition: transform 0.15s, background 0.15s;
     user-select: none;
+    z-index: 2;
   }
-  .mesa:hover { transform: translate(-50%, -50%) scale(1.2); z-index: 5; }
-  .mesa.ocupada { background: rgba(255, 0, 0, 0.6); cursor: not-allowed; }
+  .mesa:hover { transform: translate(-50%, -50%) scale(1.25); z-index: 5; }
+  .mesa.ocupada { background: rgba(255, 0, 0, 0.65); cursor: not-allowed; }
   .mesa.selecionada { background: rgba(0, 200, 100, 0.85); }
 
   .painel {
@@ -67,59 +68,78 @@
   <div class="mapa">
     <img src="https://raw.githubusercontent.com/pubvillavelha-oss/Reservas_VVP/main/MAPA%20SALAO%20VVP.png" alt="Mapa do salão do Villa Velha Pub">
 
-    <!-- Mesas 1 a 46 - ajuste left/top conforme a posição real na imagem -->
-    <div class="mesa" data-mesa="1" style="left:8%;top:12%">1</div>
-    <div class="mesa" data-mesa="2" style="left:18%;top:12%">2</div>
-    <div class="mesa" data-mesa="3" style="left:28%;top:12%">3</div>
-    <div class="mesa" data-mesa="4" style="left:38%;top:12%">4</div>
-    <div class="mesa ocupada" data-mesa="5" style="left:48%;top:12%">5</div>
-    <div class="mesa" data-mesa="6" style="left:58%;top:12%">6</div>
-    <div class="mesa" data-mesa="7" style="left:68%;top:12%">7</div>
-    <div class="mesa" data-mesa="8" style="left:78%;top:12%">8</div>
+    <!-- ================= LADO ESQUERDO ================= -->
+    <!-- Fileira 1 (frente) -->
+    <div class="mesa" data-mesa="20" style="left:12%;top:15%">20</div>
 
-    <div class="mesa" data-mesa="9" style="left:13%;top:22%">9</div>
-    <div class="mesa" data-mesa="10" style="left:23%;top:22%">10</div>
-    <div class="mesa" data-mesa="11" style="left:33%;top:22%">11</div>
-    <div class="mesa" data-mesa="12" style="left:43%;top:22%">12</div>
-    <div class="mesa" data-mesa="13" style="left:53%;top:22%">13</div>
-    <div class="mesa" data-mesa="14" style="left:63%;top:22%">14</div>
-    <div class="mesa" data-mesa="15" style="left:73%;top:22%">15</div>
+    <!-- Fileira 2 -->
+    <div class="mesa" data-mesa="19" style="left:12%;top:25%">19</div>
+    <div class="mesa" data-mesa="14" style="left:22%;top:25%">14</div>
+    <div class="mesa" data-mesa="9" style="left:32%;top:25%">9</div>
 
-    <div class="mesa" data-mesa="16" style="left:8%;top:32%">16</div>
-    <div class="mesa" data-mesa="17" style="left:18%;top:32%">17</div>
-    <div class="mesa" data-mesa="18" style="left:28%;top:32%">18</div>
-    <div class="mesa" data-mesa="19" style="left:38%;top:32%">19</div>
-    <div class="mesa ocupada" data-mesa="20" style="left:48%;top:32%">20</div>
-    <div class="mesa" data-mesa="21" style="left:58%;top:32%">21</div>
-    <div class="mesa" data-mesa="22" style="left:68%;top:32%">22</div>
-    <div class="mesa" data-mesa="23" style="left:78%;top:32%">23</div>
+    <!-- Fileira 3 -->
+    <div class="mesa" data-mesa="4" style="left:12%;top:35%">4</div>
+    <div class="mesa" data-mesa="8" style="left:22%;top:35%">8</div>
+    <div class="mesa" data-mesa="13" style="left:32%;top:35%">13</div>
+    <div class="mesa" data-mesa="18" style="left:42%;top:35%">18</div>
 
-    <div class="mesa" data-mesa="24" style="left:13%;top:42%">24</div>
-    <div class="mesa" data-mesa="25" style="left:23%;top:42%">25</div>
-    <div class="mesa" data-mesa="26" style="left:33%;top:42%">26</div>
-    <div class="mesa" data-mesa="27" style="left:43%;top:42%">27</div>
-    <div class="mesa" data-mesa="28" style="left:53%;top:42%">28</div>
-    <div class="mesa" data-mesa="29" style="left:63%;top:42%">29</div>
-    <div class="mesa" data-mesa="30" style="left:73%;top:42%">30</div>
+    <!-- Fileira 4 -->
+    <div class="mesa" data-mesa="3" style="left:12%;top:45%">3</div>
+    <div class="mesa" data-mesa="7" style="left:22%;top:45%">7</div>
+    <div class="mesa" data-mesa="12" style="left:32%;top:45%">12</div>
+    <div class="mesa" data-mesa="17" style="left:42%;top:45%">17</div>
 
-    <div class="mesa" data-mesa="31" style="left:8%;top:52%">31</div>
-    <div class="mesa" data-mesa="32" style="left:18%;top:52%">32</div>
-    <div class="mesa" data-mesa="33" style="left:28%;top:52%">33</div>
-    <div class="mesa" data-mesa="34" style="left:38%;top:52%">34</div>
-    <div class="mesa" data-mesa="35" style="left:48%;top:52%">35</div>
-    <div class="mesa" data-mesa="36" style="left:58%;top:52%">36</div>
-    <div class="mesa" data-mesa="37" style="left:68%;top:52%">37</div>
-    <div class="mesa" data-mesa="38" style="left:78%;top:52%">38</div>
+    <!-- Fileira 5 -->
+    <div class="mesa" data-mesa="2" style="left:12%;top:55%">2</div>
+    <div class="mesa" data-mesa="6" style="left:22%;top:55%">6</div>
+    <div class="mesa" data-mesa="11" style="left:32%;top:55%">11</div>
+    <div class="mesa" data-mesa="16" style="left:42%;top:55%">16</div>
 
-    <div class="mesa" data-mesa="39" style="left:13%;top:62%">39</div>
-    <div class="mesa" data-mesa="40" style="left:23%;top:62%">40</div>
-    <div class="mesa" data-mesa="41" style="left:33%;top:62%">41</div>
-    <div class="mesa" data-mesa="42" style="left:43%;top:62%">42</div>
-    <div class="mesa" data-mesa="43" style="left:53%;top:62%">43</div>
-    <div class="mesa" data-mesa="44" style="left:63%;top:62%">44</div>
-    <div class="mesa" data-mesa="45" style="left:73%;top:62%">45</div>
+    <!-- Fileira 6 (fundo) -->
+    <div class="mesa" data-mesa="1" style="left:12%;top:65%">1</div>
+    <div class="mesa" data-mesa="5" style="left:22%;top:65%">5</div>
+    <div class="mesa" data-mesa="10" style="left:32%;top:65%">10</div>
+    <div class="mesa" data-mesa="15" style="left:42%;top:65%">15</div>
 
-    <div class="mesa" data-mesa="46" style="left:18%;top:72%">46</div>
+    <!-- ================= LADO DIREITO ================= -->
+    <!-- Fileira 1 (frente) -->
+    <div class="mesa" data-mesa="27" style="left:58%;top:12%">27</div>
+    <div class="mesa" data-mesa="34" style="left:68%;top:12%">34</div>
+    <div class="mesa" data-mesa="41" style="left:78%;top:12%">41</div>
+    <div class="mesa" data-mesa="46" style="left:88%;top:12%">46</div>
+
+    <!-- Fileira 2 -->
+    <div class="mesa" data-mesa="26" style="left:58%;top:20%">26</div>
+    <div class="mesa" data-mesa="33" style="left:68%;top:20%">33</div>
+    <div class="mesa" data-mesa="40" style="left:78%;top:20%">40</div>
+    <div class="mesa" data-mesa="45" style="left:88%;top:20%">45</div>
+
+    <!-- Fileira 3 -->
+    <div class="mesa" data-mesa="25" style="left:58%;top:28%">25</div>
+    <div class="mesa" data-mesa="32" style="left:68%;top:28%">32</div>
+    <div class="mesa" data-mesa="39" style="left:78%;top:28%">39</div>
+    <div class="mesa" data-mesa="43" style="left:88%;top:28%">43</div>
+
+    <!-- Fileira 4 -->
+    <div class="mesa" data-mesa="24" style="left:58%;top:36%">24</div>
+    <div class="mesa" data-mesa="31" style="left:68%;top:36%">31</div>
+    <div class="mesa" data-mesa="38" style="left:78%;top:36%">38</div>
+    <div class="mesa" data-mesa="42" style="left:88%;top:36%">42</div>
+
+    <!-- Fileira 5 -->
+    <div class="mesa" data-mesa="23" style="left:58%;top:44%">23</div>
+    <div class="mesa" data-mesa="30" style="left:68%;top:44%">30</div>
+    <div class="mesa" data-mesa="37" style="left:78%;top:44%">37</div>
+
+    <!-- Fileira 6 -->
+    <div class="mesa" data-mesa="22" style="left:58%;top:52%">22</div>
+    <div class="mesa" data-mesa="29" style="left:68%;top:52%">29</div>
+    <div class="mesa" data-mesa="36" style="left:78%;top:52%">36</div>
+
+    <!-- Fileira 7 (fundo) -->
+    <div class="mesa" data-mesa="21" style="left:58%;top:60%">21</div>
+    <div class="mesa" data-mesa="28" style="left:68%;top:60%">28</div>
+    <div class="mesa" data-mesa="35" style="left:78%;top:60%">35</div>
   </div>
 
   <div class="painel">
