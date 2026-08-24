@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Villa Velha Pub - Reserva de Mesa</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #14141f; color: #fff; padding: 20px; }
+  h1 { text-align: center; font-size: 26px; margin-bottom: 4px; }
+  .sub { text-align: center; color: #aaa; font-size: 13px; margin-bottom: 18px; }
+
+  .topo { display: flex; justify-content: center; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+  .topo label { color: #ccc; font-size: 14px; }
+  .topo input[type="date"] {
+    background: #1e1e2e; color: #fff; border: 1px solid #444;
+    padding: 8px 12px; border-radius: 6px; font-size: 14px;
+  }
+
+  .legenda { display: flex; justify-content: center; gap: 20px; margin-bottom: 18px; font-size: 13px; color: #ccc; flex-wrap: wrap; }
+  .legenda span { display: inline-flex; align-items: center; gap: 6px; }
+  .bolinha { width: 14px; height: 14px; border-radius: 50%; display: inline-block; border: 1px solid #fff; }
+  .b-livre { background: rgba(0, 140, 255, 0.6); }
+  .b-ocupada { background: rgba(255, 0, 0, 0.6); }
+  .b-selecionada { background: rgba(0, 200, 100, 0.85); }
+
+  .container { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; align-items: flex-start; }
+
+  /* Mapa */
+  .mapa { position: relative; width: 520px; max-width: 100%; border-radius: 10px; overflow: hidden; border: 2px solid #333; background: #000; }
+  .mapa img { width: 100%; display: block; }
+  .mesa {
+    position: absolute; width: 32px; height: 32px; border-radius: 50%;
+    transform: translate(-50%, -50%); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 11px; color: #fff;
+    background: rgba(0, 140, 255, 0.6); border: 2px solid #fff;
+    transition: transform 0.15s, background 0.15s; user-select: none; z-index: 2;
+  }
+  .mesa:hover { transform: translate(-50%, -50%) scale(1.2); z-index: 5; }
+  .mesa.ocupada { background: rgba(255, 0, 0, 0.65); cursor: not-allowed; }
+  .mesa.selecionada { background: rgba(0, 200, 100, 0.9); border-color: #fff; z-index: 6; }
+  .mesa.carregando { opacity: 0.5; pointer-events: none; }
+
+  /* Formulário */
+  .form { width: 360px; max-width: 100%; background: #1e1e2e; border-radius: 12px; padding: 24px; }
+  .form h3 { margin-bottom: 14px; font-size: 17px; text-align: center; }
+  label { display: block; font-size: 13px; color: #ccc; margin: 12px 0 4px; }
+  input, select, textarea {
+    width: 100%; padding: 10px 12px; border-radius: 6px;
+    border: 1px solid #444; background: #14141f; color: #fff; font-size: 14px;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: #00c864; }
+
+  .mesa-escolhida {
+    margin-top: 12px; padding: 10px 12px; border-radius: 6px;
+    background: #14141f; border: 1px solid #444; font-size: 14px; color: #ccc;
+  }
+  .mesa-escolhida strong { color: #00c864; }
+
+  .btn { width: 100%; padding: 13px; border: none; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; margin-top: 18px; }
+  .btn-enviar { background: #00c864; color: #fff; }
+  .btn-enviar:disabled { background: #2a5a40; color: #888; cursor: not-allowed; }
+
+  .msg { margin-top: 12px; font-size: 13px; padding: 10px; border-radius: 6px; background: #2a2a3e; display: none; }
+  .msg.erro { border-left: 4px solid #ff4444; }
+  .msg.ok { border-left: 4px solid #00c864; }
+</style>
+</head>
+<body>
+
+<h1>🍺 Villa Velha Pub</h1>
+<p class="sub">Escolha sua mesa e preencha os dados para reservar</p>
+
+<div class="topo">
+  <label for="data">📅 Data da reserva:</label>
+  <input type="date" id="data">
+</div>
+
+<div class="legenda">
+  <span><i class="bolinha b-livre"></i> Disponível</span>
+  <span><i class="bolinha b-ocupada"></i> Ocupada</span>
+  <span><i class="bolinha b-selecionada"></i> Selecionada</span>
+</div>
+
+<div class="container">
+  <!-- ===== MAPA CLICÁVEL ===== -->
+  <div class="mapa">
+    <img src="https://raw.githubusercontent.com/pubvillavelha-oss/Reservas_VVP/main/MAPA%20SALAO%20VVP.png" alt="Mapa do salão do Villa Velha Pub">
+
+    <!-- LADO ESQUERDO -->
+    <div class="mesa" data-mesa="20" style="left:12%;top:15%">20</div>
+    <div class="mesa" data-mesa="19" style="left:12%;top:25%">19</div>
+    <div class="mesa" data-mesa="14" style="left:22%;top:25%">14</div>
+    <div class="mesa" data-mesa="9"  style="left:32%;top:25%">9</div>
+    <div class="mesa" data-mesa="4"  style="left:12%;top:35%">4</div>
+    <div class="mesa" data-mesa="8"  style="left:22%;top:35%">8</div>
+    <div class="mesa" data-mesa="13" style="left:32%;top:35%">13</div>
+    <div class="mesa" data-mesa="18" style="left:42%;top:35%">18</div>
+    <div class="mesa" data-mesa="3"  style="left:12%;top:45%">3</div>
+    <div class="mesa" data-mesa="7"  style="left:22%;top:45%">7</div>
+    <div class="mesa" data-mesa="12" style="left:32%;top:45%">12</div>
+    <div class="mesa" data-mesa="17" style="left:42%;top:45%">17</div>
+    <div class="mesa" data-mesa="2"  style="left:12%;top:55%">2</div>
+    <div class="mesa" data-mesa="6"  style="left:22%;top:55%">6</div>
+    <div class="mesa" data-mesa="11" style="left:32%;top:55%">11</div>
+    <div class="mesa" data-mesa="16" style="left:42%;top:55%">16</div>
+    <div class="mesa" data-mesa="1"  style="left:12%;top:65%">1</div>
+    <div class="mesa" data-mesa="5"  style="left:22%;top:65%">5</div>
+    <div class="mesa" data-mesa="10" style="left:32%;top:65%">10</div>
+    <div class="mesa" data-mesa="15" style="left:42%;top:65%">15</div>
+
+    <!-- LADO DIREITO -->
+    <div class="mesa" data-mesa="27" style="left:58%;top:12%">27</div>
+    <div class="mesa" data-mesa="34" style="left:68%;top:12%">34</div>
+    <div class="mesa" data-mesa="41" style="left:78%;top:12%">41</div>
+    <div class="mesa" data-mesa="46" style="left:88%;top:12%">46</div>
+    <div class="mesa" data-mesa="26" style="left:58%;top:20%">26</div>
+    <div class="mesa" data-mesa="33" style="left:68%;top:20%">33</div>
+    <div class="mesa" data-mesa="40" style="left:78%;top:20%">40</div>
+    <div class="mesa" data-mesa="45" style="left:88%;top:20%">45</div>
+    <div class="mesa" data-mesa="25" style="left:58%;top:28%">25</div>
+    <div class="mesa" data-mesa="32" style="left:68%;top:28%">32</div>
+    <div class="mesa" data-mesa="39" style="left:78%;top:28%">39</div>
+    <div class="mesa" data-mesa="43" style="left:88%;top:28%">43</div>
+    <div class="mesa" data-mesa="24" style="left:58%;top:36%">24</div>
+    <div class="mesa" data-mesa="31" style="left:68%;top:36%">31</div>
+    <div class="mesa" data-mesa="38" style="left:78%;top:36%">38</div>
+    <div class="mesa" data-mesa="42" style="left:88%;top:36%">42</div>
+    <div class="mesa" data-mesa="23" style="left:58%;top:44%">23</div>
+    <div class="mesa" data-mesa="30" style="left:68%;top:44%">30</div>
+    <div class="mesa" data-mesa="37" style="left:78%;top:44%">37</div>
+    <div class="mesa" data-mesa="44" style="left:88%;top:44%">44</div>
+    <div class="mesa" data-mesa="22" style="left:58%;top:52%">22</div>
+    <div class="mesa" data-mesa="29" style="left:68%;top:52%">29</div>
+    <div class="mesa" data-mesa="36" style="left:78%;top:52%">36</div>
+    <div class="mesa" data-mesa="21" style="left:58%;top:60%">21</div>
+    <div class="mesa" data-mesa="28" style="left:68%;top:60%">28</div>
+    <div class="mesa" data-mesa="35" style="left:78%;top:60%">35</div>
+  </div>
+
+  <!-- ===== FORMULÁRIO ===== -->
+  <form class="form" id="formReserva">
+    <h3>📋 Dados da reserva</h3>
+
+    <div class="mesa-escolhida" id="mesaEscolhida">Nenhuma mesa selecionada</div>
+
+    <label for="nome">👤 Nome</label>
+    <input type="text" id="nome" placeholder="Seu nome completo" required>
+
+    <label for="telefone">📱 Telefone / WhatsApp</label>
+    <input type="tel" id="telefone" placeholder="(00) 00000-0000" required>
+
+    <label for="lugares">🪑 Quantidade de lugares</label>
+    <select id="lugares" required>
+      <option value="">Selecione...</option>
+      <option value="2">2 pessoas</option>
+      <option value="4">4 pessoas</option>
+      <option value="6">6 pessoas</option>
+      <option value="8">8 pessoas</option>
+      <option value="10">10 pessoas</option>
+      <option value="12">12 pessoas</option>
+    </select>
+
+    <label for="motivo">🎉 Motivo da reserva</label>
+    <select id="motivo">
+      <option value="">Selecione (opcional)</option>
+      <option value="Aniversário">Aniversário</option>
+      <option value="Confraternização">Confraternização</option>
+      <option value="Encontro">Encontro</option>
+      <option value="Show">Show</option>
+      <option value="Outro">Outro</option>
+    </select>
+
+    <label for="observacao">📝 Observações</label>
+    <textarea id="observacao" rows="2" placeholder="Alguma observação? (opcional)"></textarea>
+
+    <button type="submit" class="btn btn-enviar" id="btnEnviar" disabled>Confirmar reserva</button>
+    <div class="msg" id="msg"></div>
+  </form>
+</div>
+
+<script>
+  // ============================================================
+  // CONFIGURAÇÃO — preencha com a URL real do seu Apps Script
+  // ============================================================
+  const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/COLE_AQUI_SEU_ID/exec';
+  // ============================================================
+
+  const dataInput = document.getElementById('data');
+  const form = document.getElementById('formReserva');
+  const msg = document.getElementById('msg');
+  const btnEnviar = document.getElementById('btnEnviar');
+  const mesaEscolhida = document.getElementById('mesaEscolhida');
+  const mesas = document.querySelectorAll('.mesa');
+
+  let mesaSelecionada = null;
+
+  // Data padrão = hoje
+  function dataHoje() {
+    const hoje = new Date();
+    return hoje.getFullYear() + '-' +
+      String(hoje.getMonth() + 1).padStart(2, '0') + '-' +
+      String(hoje.getDate()).padStart(2, '0');
+  }
+  dataInput.value = dataHoje();
+
+  // ===== Consulta mesas ocupadas na data =====
+  async function carregarOcupadas() {
+    const data = dataInput.value;
+    if (!data) return;
+    mesas.forEach(m => m.classList.add('carregando'));
+    msg.className = 'msg'; msg.textContent = 'Carregando disponibilidade...'; msg.style.display = 'block';
+
+    try {
+      const res = await fetch(APPS_SCRIPT_URL + '?aba=mesas&data=' + data);
+      const dados = await res.json();
+      const ocupadas = dados.mesasOcupadas || [];
+
+      mesas.forEach(m => {
+        m.classList.remove('ocupada', 'selecionada');
+        if (ocupadas.indexOf(Number(m.dataset.mesa)) > -1) m.classList.add('ocupada');
+      });
+
+      mesaSelecionada = null;
+      atualizarMesa();
+      msg.style.display = 'none';
+    } catch (err) {
+      msg.className = 'msg erro';
+      msg.textContent = '⚠️ Não foi possível consultar as mesas. Verifique a URL do Apps Script.';
+      console.error(err);
+    } finally {
+      mesas.forEach(m => m.classList.remove('carregando'));
+    }
+  }
+
+  // ===== Clique na mesa =====
+  mesas.forEach(mesa => {
+    mesa.addEventListener('click', () => {
+      if (mesa.classList.contains('ocupada')) {
+        msg.className = 'msg erro';
+        msg.textContent = '❌ Mesa ' + mesa.dataset.mesa + ' já está ocupada nesta data.';
+        msg.style.display = 'block';
+        return;
+      }
+      const n = Number(mesa.dataset.mesa);
+      if (mesaSelecionada === n) {
+        mesa.classList.remove('selecionada');
+        mesaSelecionada = null;
+      } else {
+        document.querySelectorAll('.mesa.selecionada').forEach(m => m.classList.remove('selecionada'));
+        mesa.classList.add('selecionada');
+        mesaSelecionada = n;
+      }
+      atualizarMesa();
+      msg.style.display = 'none';
+    });
+  });
+
+  function atualizarMesa() {
+    if (mesaSelecionada === null) {
+      mesaEscolhida.textContent = 'Nenhuma mesa selecionada';
+      btnEnviar.disabled = true;
+    } else {
+      mesaEscolhida.innerHTML = 'Mesa selecionada: <strong>' + mesaSelecionada + '</strong>';
+      btnEnviar.disabled = false;
+    }
+  }
+
+  // ===== Envio =====
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    if (mesaSelecionada === null) {
+      msg.className = 'msg erro';
+      msg.textContent = '⚠️ Selecione uma mesa no mapa.';
+      msg.style.display = 'block';
+      return;
+    }
+
+    const payload = {
+      data: dataInput.value,
+      nome: document.getElementById('nome').value,
+      telefone: document.getElementById('telefone').value,
+      lugares: document.getElementById('lugares').value,
+      motivo: document.getElementById('motivo').value,
+      observacao: document.getElementById('observacao').value,
+      mesa: mesaSelecionada
+    };
+
+    btnEnviar.disabled = true;
+    btnEnviar.textContent = 'Enviando...';
+
+    try {
+      await fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
+      });
+      msg.className = 'msg ok';
+      msg.textContent = '✅ Reserva enviada! Aguarde a confirmação do Villa Velha Pub.';
+      msg.style.display = 'block';
+      form.reset();
+      document.querySelectorAll('.mesa.selecionada').forEach(m => m.classList.remove('selecionada'));
+      mesaSelecionada = null;
+      atualizarMesa();
+      dataInput.value = dataHoje();
+    } catch (err) {
+      msg.className = 'msg erro';
+      msg.textContent = '❌ Erro ao enviar. Tente novamente.';
+      msg.style.display = 'block';
+      console.error(err);
+    } finally {
+      btnEnviar.disabled = false;
+      btnEnviar.textContent = 'Confirmar reserva';
+    }
+  });
+
+  // Recarrega disponibilidade ao trocar a data
+  dataInput.addEventListener('change', carregarOcupadas);
+
+  // Carrega ao abrir
+  carregarOcupadas();
+</script>
+</body>
+</html>
