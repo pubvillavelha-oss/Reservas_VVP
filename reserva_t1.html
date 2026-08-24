@@ -513,7 +513,7 @@
       });
     });
 
-    // ===== Envio =====
+    // ===== Envio (lê a resposta do servidor) =====
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       mensagemSucesso.style.display = 'none';
@@ -537,8 +537,9 @@
 
       const tipoReserva = document.querySelector('input[name="tipoReserva"]:checked').value;
       const mesaReservada = mesaSelecionada;
+      const dataReservada = dataSelecionada;
       const payload = {
-        data: dataSelecionada,
+        data: dataReservada,
         mesa: mesaReservada,
         tipoReserva: tipoReserva,
         linkTaxa: linkTaxa,
@@ -553,16 +554,19 @@
       btnEnviar.disabled = true;
       loading.style.display = 'block';
 
-      function enviarDireto() {
-        fetch(APPS_SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'text/plain' },
-          body: JSON.stringify(payload)
-        })
-        .then(function () {
-          loading.style.display = 'none';
-          btnEnviar.disabled = false;
+      // POST legível (sem no-cors): o navegador lê ok/erro do servidor.
+      // IMPORTANTE: o Apps Script precisa estar publicado com acesso "Qualquer pessoa".
+      fetch(APPS_SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(payload)
+      })
+      .then(function (res) { return res.json(); })
+      .then(function (resp) {
+        loading.style.display = 'none';
+        btnEnviar.disabled = false;
+
+        if (resp && resp.ok) {
           mensagemSucesso.style.display = 'block';
           form.reset();
           contador.textContent = '0 / 50';
@@ -570,41 +574,33 @@
           mesaSelecionada = null;
           cliqueLinkTaxa = '';
           document.querySelectorAll('.mesa.selecionada').forEach(function (m) { m.classList.remove('selecionada'); });
+          mesaInfo.textContent = 'nenhuma';
+          atualizarBotaoPagamento();
+          carregarMesasOcupadas(dataReservada);
+        } else {
           document.querySelectorAll('.mesa[data-mesa="' + mesaReservada + '"]').forEach(function (m) {
             m.classList.add('ocupada', 'ocupada-dinamica');
           });
+          mesaSelecionada = null;
           mesaInfo.textContent = 'nenhuma';
-          atualizarBotaoPagamento();
-        })
-        .catch(function () {
-          loading.style.display = 'none';
-          btnEnviar.disabled = false;
-          alert('Erro ao enviar a reserva. Tente novamente.');
-        });
-      }
-
-      // Pré-checagem de conflito (GET legível — o POST é no-cors e não retorna corpo)
-      fetch(APPS_SCRIPT_URL + '?aba=verificar&data=' + encodeURIComponent(payload.data) + '&mesa=' + payload.mesa)
-        .then(function (res) { return res.json(); })
-        .then(function (resp) {
-          if (resp && resp.conflito) {
-            document.querySelectorAll('.mesa[data-mesa="' + mesaReservada + '"]').forEach(function (m) {
-              m.classList.add('ocupada', 'ocupada-dinamica');
-            });
-            mesaSelecionada = null;
-            mesaInfo.textContent = 'nenhuma';
-            erroConflito.textContent = 'A mesa ' + mesaReservada + ' acabou de ser reservada para a data escolhida. Selecione outra mesa.';
-            erroConflito.style.display = 'block';
-            loading.style.display = 'none';
-            btnEnviar.disabled = false;
-            return;
-          }
-          enviarDireto();
-        })
-        .catch(function () {
-          enviarDireto();
-        });
+          erroConflito.textContent = mensagemAmigavel(resp && resp.erro);
+          erroConflito.style.display = 'block';
+          carregarMesasOcupadas(dataReservada);
+        }
+      })
+      .catch(function () {
+        loading.style.display = 'none';
+        btnEnviar.disabled = false;
+        alert('Não foi possível conectar ao servidor. Verifique se o Apps Script está publicado com acesso "Qualquer pessoa" e se a URL está correta.');
+      });
     });
+
+    function mensagemAmigavel(erro) {
+      if (!erro) return 'Não foi possível registrar a reserva. Tente novamente.';
+      var m = String(erro).match(/^Mesa (\d+) já reservada para esta data/);
+      if (m) return 'A mesa ' + m[1] + ' já foi reservada para esta data. Selecione outra mesa.';
+      return String(erro);
+    }
 
     // ===== Inicializa =====
     carregarAgenda();
