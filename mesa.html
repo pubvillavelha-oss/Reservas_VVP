@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Villa Velha Pub - Seleção de Mesa</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #14141f; color: #fff; padding: 20px; }
+  h1 { text-align: center; margin-bottom: 6px; font-size: 22px; }
+  .sub { text-align: center; color: #aaa; font-size: 13px; margin-bottom: 20px; }
+
+  .container { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+
+  .mapa {
+    position: relative;
+    width: 500px;
+    max-width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 2px solid #333;
+    background: #000;
+  }
+  .mapa img { width: 100%; display: block; }
+
+  .mesa {
+    position: absolute;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 11px; color: #fff;
+    background: rgba(0, 140, 255, 0.55);
+    border: 2px solid #fff;
+    transition: transform 0.15s, background 0.15s;
+    user-select: none;
+  }
+  .mesa:hover { transform: translate(-50%, -50%) scale(1.2); z-index: 5; }
+  .mesa.ocupada { background: rgba(255, 0, 0, 0.6); cursor: not-allowed; }
+  .mesa.selecionada { background: rgba(0, 200, 100, 0.85); }
+
+  .painel {
+    width: 300px;
+    background: #1e1e2e;
+    border-radius: 10px;
+    padding: 16px;
+    max-height: 600px;
+    overflow-y: auto;
+  }
+  .painel h3 { margin-bottom: 10px; font-size: 15px; }
+  .reg { padding: 7px 10px; border-radius: 6px; margin-bottom: 6px; font-size: 13px; background: #2a2a3e; }
+  .reg.ok { border-left: 4px solid #00c864; }
+  .reg.erro { border-left: 4px solid #ff4444; }
+  .reg.info { border-left: 4px solid #ffaa00; }
+  .stats { margin-top: 10px; font-size: 13px; color: #ccc; }
+  .btn-limpar { margin-top: 10px; width: 100%; padding: 8px; border: none; border-radius: 6px;
+    background: #ff4444; color: #fff; font-weight: bold; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<h1>🍺 Villa Velha Pub - Seleção de Mesa</h1>
+<p class="sub">Clique em uma mesa para testar a seleção e o registro na base de dados</p>
+
+<div class="container">
+  <div class="mapa">
+    <img src="https://raw.githubusercontent.com/pubvillavelha-oss/Reservas_VVP/main/MAPA%20SALAO%20VVP.png" alt="Mapa do salão do Villa Velha Pub">
+
+    <!-- Mesas 1 a 46 - ajuste left/top conforme a posição real na imagem -->
+    <div class="mesa" data-mesa="1" style="left:8%;top:12%">1</div>
+    <div class="mesa" data-mesa="2" style="left:18%;top:12%">2</div>
+    <div class="mesa" data-mesa="3" style="left:28%;top:12%">3</div>
+    <div class="mesa" data-mesa="4" style="left:38%;top:12%">4</div>
+    <div class="mesa ocupada" data-mesa="5" style="left:48%;top:12%">5</div>
+    <div class="mesa" data-mesa="6" style="left:58%;top:12%">6</div>
+    <div class="mesa" data-mesa="7" style="left:68%;top:12%">7</div>
+    <div class="mesa" data-mesa="8" style="left:78%;top:12%">8</div>
+
+    <div class="mesa" data-mesa="9" style="left:13%;top:22%">9</div>
+    <div class="mesa" data-mesa="10" style="left:23%;top:22%">10</div>
+    <div class="mesa" data-mesa="11" style="left:33%;top:22%">11</div>
+    <div class="mesa" data-mesa="12" style="left:43%;top:22%">12</div>
+    <div class="mesa" data-mesa="13" style="left:53%;top:22%">13</div>
+    <div class="mesa" data-mesa="14" style="left:63%;top:22%">14</div>
+    <div class="mesa" data-mesa="15" style="left:73%;top:22%">15</div>
+
+    <div class="mesa" data-mesa="16" style="left:8%;top:32%">16</div>
+    <div class="mesa" data-mesa="17" style="left:18%;top:32%">17</div>
+    <div class="mesa" data-mesa="18" style="left:28%;top:32%">18</div>
+    <div class="mesa" data-mesa="19" style="left:38%;top:32%">19</div>
+    <div class="mesa ocupada" data-mesa="20" style="left:48%;top:32%">20</div>
+    <div class="mesa" data-mesa="21" style="left:58%;top:32%">21</div>
+    <div class="mesa" data-mesa="22" style="left:68%;top:32%">22</div>
+    <div class="mesa" data-mesa="23" style="left:78%;top:32%">23</div>
+
+    <div class="mesa" data-mesa="24" style="left:13%;top:42%">24</div>
+    <div class="mesa" data-mesa="25" style="left:23%;top:42%">25</div>
+    <div class="mesa" data-mesa="26" style="left:33%;top:42%">26</div>
+    <div class="mesa" data-mesa="27" style="left:43%;top:42%">27</div>
+    <div class="mesa" data-mesa="28" style="left:53%;top:42%">28</div>
+    <div class="mesa" data-mesa="29" style="left:63%;top:42%">29</div>
+    <div class="mesa" data-mesa="30" style="left:73%;top:42%">30</div>
+
+    <div class="mesa" data-mesa="31" style="left:8%;top:52%">31</div>
+    <div class="mesa" data-mesa="32" style="left:18%;top:52%">32</div>
+    <div class="mesa" data-mesa="33" style="left:28%;top:52%">33</div>
+    <div class="mesa" data-mesa="34" style="left:38%;top:52%">34</div>
+    <div class="mesa" data-mesa="35" style="left:48%;top:52%">35</div>
+    <div class="mesa" data-mesa="36" style="left:58%;top:52%">36</div>
+    <div class="mesa" data-mesa="37" style="left:68%;top:52%">37</div>
+    <div class="mesa" data-mesa="38" style="left:78%;top:52%">38</div>
+
+    <div class="mesa" data-mesa="39" style="left:13%;top:62%">39</div>
+    <div class="mesa" data-mesa="40" style="left:23%;top:62%">40</div>
+    <div class="mesa" data-mesa="41" style="left:33%;top:62%">41</div>
+    <div class="mesa" data-mesa="42" style="left:43%;top:62%">42</div>
+    <div class="mesa" data-mesa="43" style="left:53%;top:62%">43</div>
+    <div class="mesa" data-mesa="44" style="left:63%;top:62%">44</div>
+    <div class="mesa" data-mesa="45" style="left:73%;top:62%">45</div>
+
+    <div class="mesa" data-mesa="46" style="left:18%;top:72%">46</div>
+  </div>
+
+  <div class="painel">
+    <h3>📋 Registro de seleção</h3>
+    <div id="log"></div>
+    <div class="stats" id="stats">Total de mesas: 46</div>
+    <button class="btn-limpar" onclick="limpar()">Limpar registro</button>
+  </div>
+</div>
+
+<script>
+  const banco = [];
+  const log = document.getElementById('log');
+  const stats = document.getElementById('stats');
+
+  function registrar(tipo, texto) {
+    const div = document.createElement('div');
+    div.className = 'reg ' + tipo;
+    div.textContent = texto;
+    log.prepend(div);
+  }
+
+  document.querySelectorAll('.mesa').forEach(mesa => {
+    mesa.addEventListener('click', () => {
+      const numero = mesa.dataset.mesa;
+      if (mesa.classList.contains('ocupada')) {
+        registrar('erro', `❌ Mesa ${numero} está OCUPADA`);
+        return;
+      }
+      mesa.classList.toggle('selecionada');
+      const selecionada = mesa.classList.contains('selecionada');
+      const hora = new Date().toLocaleTimeString();
+      banco.push({ mesa: numero, hora, selecionada });
+      registrar(selecionada ? 'ok' : 'info',
+        `${selecionada ? '✅' : '↩️'} Mesa ${numero} ${selecionada ? 'SELECIONADA' : 'desmarcada'} às ${hora}`);
+      const selecionadas = document.querySelectorAll('.mesa.selecionada').length;
+      stats.textContent = `Total: 46 | Selecionadas: ${selecionadas} | Registros: ${banco.length}`;
+      console.log('Base de dados:', banco);
+    });
+  });
+
+  function limpar() {
+    banco.length = 0;
+    log.innerHTML = '';
+    stats.textContent = 'Total de mesas: 46';
+    document.querySelectorAll('.mesa.selecionada').forEach(m => m.classList.remove('selecionada'));
+  }
+</script>
+</body>
+</html>
