@@ -96,21 +96,21 @@
     .mesa-legend { display: flex; justify-content: center; gap: 16px; margin-bottom: 12px; font-size: 12px; color: #b89a6a; flex-wrap: wrap; }
     .mesa-legend .item { display: flex; align-items: center; gap: 6px; }
     .swatch { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
-    .swatch-avail { border: 1px solid #e0b84d; }
-    .swatch-occ { background: #5a4632; border: 1px solid #5a4632; }
-    .swatch-sel { background: #e0b84d; }
+    .swatch-avail { border: 1px solid #4caf50; }
+    .swatch-occ { background: #ff9800; border: 1px solid #ff9800; }
+    .swatch-sel { background: #ffeb3b; }
     .mesas-map { position: relative; width: 100%; border: 1px solid #6b4f2e; border-radius: 12px; overflow: hidden; background: #1a0f0a; }
     .mesas-map img { width: 100%; display: block; }
     .mesa {
       position: absolute; transform: translate(-50%, -50%);
       width: 30px; height: 30px; line-height: 28px; text-align: center;
-      background: rgba(26,15,10,0.82); border: 1px solid #e0b84d; border-radius: 50%;
-      color: #e0b84d; font-size: 11px; font-weight: 700; cursor: pointer;
+      background: rgba(26,15,10,0.82); border: 1px solid #4caf50; border-radius: 50%;
+      color: #4caf50; font-size: 11px; font-weight: 700; cursor: pointer;
       z-index: 2; transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
     }
-    .mesa:hover { background: #3a2413; border-color: #c9a227; }
-    .mesa.ocupada { background: rgba(90,70,50,0.85); border-color: #5a4632; color: #5a4632; cursor: not-allowed; }
-    .mesa.selecionada { background: #e0b84d; border-color: #e0b84d; color: #1a0f0a; box-shadow: 0 0 0 3px rgba(224,184,77,0.35); }
+    .mesa:hover { background: #3a2413; border-color: #66bb6a; }
+    .mesa.ocupada { background: rgba(255,152,0,0.85); border-color: #ff9800; color: #1a0f0a; cursor: not-allowed; }
+    .mesa.selecionada { background: #ffeb3b; border-color: #ffeb3b; color: #1a0f0a; box-shadow: 0 0 0 3px rgba(255,235,59,0.4); }
     .mesa-info { margin-top: 10px; font-size: 13px; color: #b89a6a; text-align: center; }
     .mesa-info span { color: #e0b84d; font-weight: 700; }
     .aviso-sem-data {
@@ -457,10 +457,10 @@
             calendarPopup.classList.remove('open');
             erroConflito.style.display = 'none';
             erroMesaOcupada.style.display = 'none';
-            limparSelecaoMesa();                 // mesa pode estar ocupada na nova data
+            limparSelecaoMesa();
             renderCalendario();
-            atualizarVisibilidadeMapa();          // mostra o mapa da data escolhida
-            carregarMesasOcupadas(dataStr);       // força a busca das mesas da data
+            atualizarVisibilidadeMapa();
+            carregarMesasOcupadas(dataStr);
           });
         }
         calDays.appendChild(celula);
@@ -542,7 +542,6 @@
       const num = parseInt(mesa.getAttribute('data-mesa'), 10);
       if (MESAS_OCUPADAS_FIXAS.indexOf(num) >= 0) mesa.classList.add('ocupada');
       mesa.addEventListener('click', function () {
-        // Mesa reservada: recomenda escolher outra em vez de ignorar silenciosamente
         if (mesa.classList.contains('ocupada')) {
           erroMesaOcupada.textContent = 'A mesa ' + num + ' já está reservada para a data escolhida (' + (dataReserva.value || '?') + '). Escolha outra mesa disponível.';
           erroMesaOcupada.style.display = 'block';
@@ -625,7 +624,7 @@
           document.querySelectorAll('.mesa.selecionada').forEach(function (m) { m.classList.remove('selecionada'); });
           mesaInfo.textContent = 'nenhuma';
           atualizarBotaoPagamento();
-          atualizarVisibilidadeMapa();   // volta ao aviso "selecione uma data"
+          atualizarVisibilidadeMapa();
           carregarMesasOcupadas(dataReservada);
         } else {
           var erroTexto = mensagemAmigavel(resp && resp.erro);
@@ -660,7 +659,7 @@
     }
 
     // ===== Inicializa =====
-    atualizarVisibilidadeMapa();   // começa com o aviso "selecione uma data"
+    atualizarVisibilidadeMapa();
     carregarAgenda();
     carregarLinkTaxa();
   </script>
