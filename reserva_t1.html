@@ -57,6 +57,10 @@
     .cal-day.selected { background: #e0b84d; color: #1a0f0a; font-weight: 700; }
     .cal-day.past { color: #5a4632; cursor: not-allowed; }
     .cal-day.past:hover { background: none; }
+    .cal-day.fechado { color: #5a4632; cursor: not-allowed; }
+    .cal-day.fechado:hover { background: none; }
+    .cal-day.encerrada { color: #9a7a55; cursor: not-allowed; text-decoration: line-through; }
+    .cal-day.encerrada:hover { background: none; }
     .tooltip {
       position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%) translateY(4px);
       background: linear-gradient(135deg, #3a2413 0%, #2b1a0e 100%);
@@ -68,6 +72,8 @@
       transition: opacity 0.18s ease, transform 0.18s ease;
     }
     .tooltip::before { content: '🎤'; margin-right: 6px; font-size: 12px; }
+    .tooltip.fechado-tip::before { content: '🚫'; }
+    .tooltip.encerrada-tip::before { content: '⏰'; }
     .tooltip::after {
       content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
       border: 6px solid transparent; border-top-color: #c9a227;
@@ -141,6 +147,21 @@
     .btn-pagamento:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(224,184,77,0.3); }
     .btn-pagamento.disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; transform: none; }
 
+    .info-mesas { display: none; margin-top: 6px; font-size: 13px; color: #b89a6a; }
+    .info-horario {
+      display: none; margin-top: 12px; padding: 10px 12px; border: 1px solid #c9a227;
+      border-radius: 8px; background: rgba(201,162,39,0.08); color: #f5e9dc; font-size: 13px; line-height: 1.6;
+    }
+    .info-horario.show { display: block; }
+
+    .resumo-box {
+      display: none; margin-top: 18px; padding: 14px; border: 1px solid #c9a227;
+      border-radius: 10px; background: rgba(201,162,39,0.06);
+    }
+    .resumo-title { font-weight: 700; color: #e0b84d; margin-bottom: 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; }
+    .resumo-box > div { font-size: 13px; color: #f5e9dc; line-height: 1.7; }
+    .resumo-box strong { color: #e0b84d; }
+
     @media (max-width: 480px) {
       .mesa { width: 24px; height: 24px; line-height: 22px; font-size: 10px; }
       .mesa-legend { gap: 10px; font-size: 11px; }
@@ -164,6 +185,7 @@
       <div class="form-group">
         <label for="quantidadeLugares">1. Quantidade de Pessoas *</label>
         <input type="number" id="quantidadeLugares" min="1" max="270" placeholder="Ex.: 4" required>
+        <div class="info-mesas" id="infoMesas">Serão reservadas <span id="qtdMesasInfo">1</span> mesa(s)</div>
         <div class="error" id="erroLugares">Informe entre 1 e 270 pessoas.</div>
       </div>
       <div class="form-group">
@@ -183,7 +205,8 @@
             <div class="cal-days" id="calDays"></div>
           </div>
         </div>
-        <div class="error" id="erroData">Selecione uma data válida (hoje ou futura).</div>
+        <div class="info-horario" id="infoHorario"></div>
+        <div class="error" id="erroData">Selecione uma data válida.</div>
       </div>
     </div>
 
@@ -284,34 +307,35 @@
           <div class="error" id="erroMotivo">Selecione o motivo da reserva.</div>
         </div>
         <div class="form-group">
-          <label for="observacao">Observação <span id="obsObrigatorio" style="color:#e05d4d;display:none;">(obrigatória — 160+ pessoas)</span></label>
+          <label for="observacao">Observação <span id="obsObligatorio" style="color:#e05d4d;display:none;">(obrigatória — limite de 160 atingido)</span></label>
           <textarea id="observacao" rows="3" maxlength="200" placeholder="Máx. 200 caracteres"></textarea>
           <div class="char-counter" id="contador">0 / 200</div>
-          <div class="error" id="erroObs">Para 160 ou mais pessoas, o campo Observação é obrigatório.</div>
+          <div class="error" id="erroObs">O campo Observação é obrigatório nesta data.</div>
         </div>
         <div class="form-group">
           <label>Tipo de Reserva *</label>
           <div class="radio-group">
             <label class="radio-opt">
               <input type="radio" name="tipoReserva" value="garantida" checked>
-              <span><strong>Reserva Garantida</strong><small>Mesa reservada por 1:30  após a abertura do pub — cobrada taxa de reserva</small></span>
+              <span><strong>Reserva Garantida</strong><small>Mesa reservada por 1 hora após a abertura do pub — cobrada taxa de reserva</small></span>
             </label>
             <label class="radio-opt">
               <input type="radio" name="tipoReserva" value="sem_garantia">
-              <span><strong>Reserva Sem Garantia</strong><small>Mesa disponível por 30 minutos após a abertura do pub</small></span>
+              <span><strong>Reserva Sem Garantia</strong><small>Mesa disponível por 20 minutos após a abertura do pub</small></span>
             </label>
           </div>
         </div>
         <div class="form-group" id="grupoPagamento" style="display:none;">
-          <label>Pagamento da taxa de reserva por mesa</label>
+          <label>Pagamento da taxa de reserva</label>
           <a href="#" id="linkPagamento" class="btn-pagamento" target="_blank" rel="noopener">💳 Pagar taxa de reserva</a>
           <div class="error" id="erroPagamento">Link de pagamento não configurado na planilha.</div>
-          <div class="form-group" id="grupoCodigo" style="margin-top:12px;margin-bottom:0;display:none;">
-            <label for="codigoTransacao">Código da transação (ID do pagamento) *</label>
-            <input type="text" id="codigoTransacao" placeholder="Cole aqui o código da transação" maxlength="60">
-            <div class="error" id="erroCodigo">Informe o código da transação do pagamento.</div>
-          </div>
         </div>
+
+        <div class="resumo-box" id="resumoBox">
+          <p class="resumo-title">📋 Resumo da reserva</p>
+          <div id="resumoConteudo"></div>
+        </div>
+
         <button type="submit" class="btn" id="btnEnviar">Confirmar Reserva</button>
         <div class="loading" id="loading">Enviando reserva...</div>
         <div class="success" id="mensagemSucesso">✅ Reserva registrada com sucesso!</div>
@@ -325,6 +349,16 @@
     const CAPACIDADE_MESA = 6;
     const LIMITE_PESSOAS = 160;
     const MAX_MESA = 45;
+
+    // Horários de abertura por dia da semana (0=Dom ... 6=Sáb)
+    const HORARIOS_ABERTURA = {
+      0: { h: 20, m: 0 },   // Domingo — 20:00
+      4: { h: 20, m: 30 },  // Quinta — 20:30
+      5: { h: 21, m: 0 },   // Sexta — 21:00
+      6: { h: 21, m: 0 }    // Sábado — 21:00
+    };
+    const ANTECEDENCIA_MIN = 120; // reservas até 2h antes da abertura
+
     let AGENDA = {};
     let linkTaxa = null;
     let cliqueLinkTaxa = '';
@@ -344,20 +378,21 @@
     const nomeReserva = document.getElementById('nomeReserva');
     const telefone = document.getElementById('telefone');
     const quantidadeLugares = document.getElementById('quantidadeLugares');
+    const infoMesas = document.getElementById('infoMesas');
     const motivoReserva = document.getElementById('motivoReserva');
     const observacao = document.getElementById('observacao');
     const contador = document.getElementById('contador');
-    const obsObrigatorio = document.getElementById('obsObrigatorio');
+    const obsObl = document.getElementById('obsObligatorio');
     const erroObs = document.getElementById('erroObs');
+    const infoHorario = document.getElementById('infoHorario');
+    const resumoBox = document.getElementById('resumoBox');
+    const resumoConteudo = document.getElementById('resumoConteudo');
     const mensagemSucesso = document.getElementById('mensagemSucesso');
     const loading = document.getElementById('loading');
     const btnEnviar = document.getElementById('btnEnviar');
     const grupoPagamento = document.getElementById('grupoPagamento');
     const linkPagamento = document.getElementById('linkPagamento');
     const erroPagamento = document.getElementById('erroPagamento');
-    const grupoCodigo = document.getElementById('grupoCodigo');
-    const codigoTransacao = document.getElementById('codigoTransacao');
-    const erroCodigo = document.getElementById('erroCodigo');
     const mesaInfo = document.getElementById('mesaInfo');
     const erroMesa = document.getElementById('erroMesa');
     const erroMesaOcupada = document.getElementById('erroMesaOcupada');
@@ -373,6 +408,32 @@
     let sequenciaSelecionada = [];
     const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
+    // ===== Horários e prazo de reserva =====
+    function quebrarData(dataStr) {
+      const partes = dataStr.split('-').map(Number);
+      return { ano: partes[0], mes: partes[1], dia: partes[2] };
+    }
+    function obterAbertura(dataStr) {
+      const { ano, mes, dia } = quebrarData(dataStr);
+      return HORARIOS_ABERTURA[new Date(ano, mes - 1, dia).getDay()] || null;
+    }
+    function obterPrazoReserva(dataStr) {
+      const abertura = obterAbertura(dataStr);
+      if (!abertura) return null;
+      const { ano, mes, dia } = quebrarData(dataStr);
+      const prazo = new Date(ano, mes - 1, dia, abertura.h, abertura.m);
+      prazo.setMinutes(prazo.getMinutes() - ANTECEDENCIA_MIN);
+      return prazo;
+    }
+    function reservaEncerrada(dataStr) {
+      const prazo = obterPrazoReserva(dataStr);
+      if (!prazo) return false;
+      return new Date() >= prazo;
+    }
+    function formatarHora(h, m) {
+      return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+    }
+
     function formatarData(d) {
       const dd = String(d.getDate()).padStart(2, '0');
       const mm = String(d.getMonth() + 1).padStart(2, '0');
@@ -387,6 +448,7 @@
         m.classList.remove('selecionada', 'sugerida');
       });
       mesaInfo.textContent = 'nenhuma';
+      atualizarResumo();
     }
 
     function atualizarVisibilidadeMapa() {
@@ -398,6 +460,24 @@
         mapaContainer.style.display = 'none';
         limparSelecao();
       }
+    }
+
+    // ===== Resumo da reserva =====
+    function atualizarResumo() {
+      if (!dataSelecionada) { resumoBox.style.display = 'none'; return; }
+      const partes = dataSelecionada.split('-');
+      const dataBR = partes[2] + '/' + partes[1] + '/' + partes[0];
+      const abertura = obterAbertura(dataSelecionada);
+      const lugares = parseInt(quantidadeLugares.value, 10) || 0;
+      const qtd = qtdMesasPorPessoas(lugares);
+      const tipo = document.querySelector('input[name="tipoReserva"]:checked');
+      const linhas = [];
+      linhas.push('<div><strong>Data:</strong> ' + dataBR + (abertura ? ' (abre às ' + formatarHora(abertura.h, abertura.m) + ')' : '') + '</div>');
+      if (lugares) linhas.push('<div><strong>Pessoas:</strong> ' + lugares + ' (' + qtd + ' mesa' + (qtd > 1 ? 's' : '') + ')</div>');
+      if (sequenciaSelecionada.length) linhas.push('<div><strong>Mesas:</strong> ' + sequenciaSelecionada.join(' e ') + '</div>');
+      if (tipo) linhas.push('<div><strong>Tipo:</strong> ' + (tipo.value === 'garantida' ? 'Garantida' : 'Sem garantia') + '</div>');
+      resumoConteudo.innerHTML = linhas.join('');
+      resumoBox.style.display = 'block';
     }
 
     // ===== Agenda (hint das atrações) =====
@@ -426,7 +506,7 @@
 
     function atualizarBotaoPagamento() {
       const tipo = document.querySelector('input[name="tipoReserva"]:checked').value;
-      if (tipo === 'garantida') {
+      if (tipo === 'garantida' && !limiteAtingido) {
         grupoPagamento.style.display = 'block';
         if (linkTaxa) {
           linkPagamento.href = linkTaxa;
@@ -438,18 +518,18 @@
         }
       } else {
         grupoPagamento.style.display = 'none';
-        grupoCodigo.style.display = 'none';
       }
     }
 
     document.querySelectorAll('input[name="tipoReserva"]').forEach(function (radio) {
-      radio.addEventListener('change', atualizarBotaoPagamento);
+      radio.addEventListener('change', function () {
+        atualizarBotaoPagamento();
+        atualizarResumo();
+      });
     });
 
-    // Campo do código aparece APÓS clicar no botão "Pagar taxa"
     linkPagamento.addEventListener('click', function () {
       cliqueLinkTaxa = new Date().toLocaleString('pt-BR');
-      grupoCodigo.style.display = 'block';
     });
 
     // ===== Calendário =====
@@ -480,20 +560,40 @@
         if (data < hoje) {
           celula.classList.add('past');
         } else {
-          if (dataStr === formatarData(hoje)) celula.classList.add('today');
-          if (dataStr === dataSelecionada) celula.classList.add('selected');
-          celula.addEventListener('click', function (e) {
-            e.stopPropagation();
-            dataSelecionada = dataStr;
-            dataReserva.value = dia + '/' + (mesAtual + 1) + '/' + anoAtual;
-            calendarPopup.classList.remove('open');
-            erroConflito.style.display = 'none';
-            erroMesaOcupada.style.display = 'none';
-            limparSelecao();
-            renderCalendario();
-            atualizarVisibilidadeMapa();
-            carregarMesasOcupadas(dataStr);
-          });
+          const abertura = obterAbertura(dataStr);
+          if (!abertura) {
+            celula.classList.add('fechado');
+            const tip = document.createElement('span');
+            tip.className = 'tooltip fechado-tip';
+            tip.textContent = 'Pub fechado neste dia';
+            celula.appendChild(tip);
+          } else if (reservaEncerrada(dataStr)) {
+            celula.classList.add('encerrada');
+            const prazo = obterPrazoReserva(dataStr);
+            const tip = document.createElement('span');
+            tip.className = 'tooltip encerrada-tip';
+            tip.textContent = 'Reservas encerradas às ' + formatarHora(prazo.getHours(), prazo.getMinutes());
+            celula.appendChild(tip);
+          } else {
+            if (dataStr === formatarData(hoje)) celula.classList.add('today');
+            if (dataStr === dataSelecionada) celula.classList.add('selected');
+            celula.addEventListener('click', function (e) {
+              e.stopPropagation();
+              dataSelecionada = dataStr;
+              dataReserva.value = dia + '/' + (mesAtual + 1) + '/' + anoAtual;
+              calendarPopup.classList.remove('open');
+              erroConflito.style.display = 'none';
+              erroMesaOcupada.style.display = 'none';
+              const aberturaSel = obterAbertura(dataStr);
+              const prazoSel = obterPrazoReserva(dataStr);
+              infoHorario.innerHTML = '🕗 O Pub abre às <strong>' + formatarHora(aberturaSel.h, aberturaSel.m) + '</strong> neste dia.<br>⏰ Reservas para este dia até <strong>' + formatarHora(prazoSel.getHours(), prazoSel.getMinutes()) + '</strong>.';
+              infoHorario.classList.add('show');
+              limparSelecao();
+              renderCalendario();
+              atualizarVisibilidadeMapa();
+              carregarMesasOcupadas(dataStr);
+            });
+          }
         }
         calDays.appendChild(celula);
       }
@@ -535,18 +635,15 @@
       else formatted = '(' + digits.slice(0, 2) + ') ' + digits.slice(2, 7) + '-' + digits.slice(7);
       this.value = formatted;
     });
-
-    // Observação obrigatória quando quantidade >= 160
-    function atualizarObrigatorioObs() {
-      const lugares = parseInt(quantidadeLugares.value, 10) || 0;
-      obsObrigatorio.style.display = (lugares >= LIMITE_PESSOAS) ? 'inline' : 'none';
-    }
     quantidadeLugares.addEventListener('input', function () {
+      const n = parseInt(this.value, 10) || 0;
+      const qtd = qtdMesasPorPessoas(n);
+      document.getElementById('qtdMesasInfo').textContent = qtd;
+      infoMesas.style.display = n >= 1 ? 'block' : 'none';
       limparSelecao();
       erroMesa.style.display = 'none';
       erroMesaOcupada.style.display = 'none';
       erroConflito.style.display = 'none';
-      atualizarObrigatorioObs();
     });
 
     // ===== Lógica de múltiplas mesas =====
@@ -591,6 +688,8 @@
             totalPessoasData = dados.totalPessoas || 0;
             limiteAtingido = totalPessoasData >= LIMITE_PESSOAS;
             atualizarBannerLimite();
+            atualizarBotaoPagamento();
+            atualizarObrigatorioObs();
           }
         })
         .catch(function () {});
@@ -603,6 +702,10 @@
       } else {
         bannerLimite.style.display = 'none';
       }
+    }
+
+    function atualizarObrigatorioObs() {
+      obsObl.style.display = limiteAtingido ? 'inline' : 'none';
     }
 
     document.querySelectorAll('.mesa').forEach(function (mesa) {
@@ -623,6 +726,7 @@
           mesaInfo.textContent = 'Mesa ' + num;
           erroMesa.style.display = 'none';
           erroConflito.style.display = 'none';
+          atualizarResumo();
           return;
         }
 
@@ -663,6 +767,7 @@
         mesaInfo.textContent = 'Mesas ' + sequenciaSelecionada.join(' e ');
         erroMesa.style.display = 'none';
         erroConflito.style.display = 'none';
+        atualizarResumo();
       });
     });
 
@@ -673,8 +778,16 @@
       erroConflito.style.display = 'none';
       erroMesaOcupada.style.display = 'none';
       let valido = true;
-      if (!dataSelecionada) { document.getElementById('erroData').style.display = 'block'; valido = false; }
-      else { document.getElementById('erroData').style.display = 'none'; }
+      if (!dataSelecionada) {
+        document.getElementById('erroData').textContent = 'Selecione uma data válida.';
+        document.getElementById('erroData').style.display = 'block'; valido = false;
+      } else if (reservaEncerrada(dataSelecionada)) {
+        const prazo = obterPrazoReserva(dataSelecionada);
+        document.getElementById('erroData').textContent = 'As reservas para este dia encerram às ' + formatarHora(prazo.getHours(), prazo.getMinutes()) + '. Escolha outro dia.';
+        document.getElementById('erroData').style.display = 'block'; valido = false;
+      } else {
+        document.getElementById('erroData').style.display = 'none';
+      }
       if (!nomeReserva.value.trim()) { document.getElementById('erroNome').style.display = 'block'; valido = false; }
       else { document.getElementById('erroNome').style.display = 'none'; }
       const telefoneDigits = telefone.value.replace(/\D/g, '');
@@ -685,14 +798,10 @@
       else { document.getElementById('erroLugares').style.display = 'none'; }
       if (!motivoReserva.value) { document.getElementById('erroMotivo').style.display = 'block'; valido = false; }
       else { document.getElementById('erroMotivo').style.display = 'none'; }
-      // Observação obrigatória para 160+ pessoas
-      if (lugares >= LIMITE_PESSOAS && !observacao.value.trim()) { erroObs.style.display = 'block'; valido = false; }
+      if (limiteAtingido && !observacao.value.trim()) { erroObs.style.display = 'block'; valido = false; }
       else { erroObs.style.display = 'none'; }
       if (sequenciaSelecionada.length === 0) { erroMesa.style.display = 'block'; valido = false; }
       else { erroMesa.style.display = 'none'; }
-      // Código da transação obrigatório se o grupo de pagamento estiver visível
-      if (grupoCodigo.style.display === 'block' && !codigoTransacao.value.trim()) { erroCodigo.style.display = 'block'; valido = false; }
-      else { erroCodigo.style.display = 'none'; }
       if (!valido) return;
 
       const tipoReserva = document.querySelector('input[name="tipoReserva"]:checked').value;
@@ -703,7 +812,6 @@
         tipoReserva: tipoReserva,
         linkTaxa: linkTaxa,
         linkClique: cliqueLinkTaxa,
-        codigoTransacao: codigoTransacao.value.trim(),
         nome: nomeReserva.value.trim(),
         telefone: telefone.value.trim(),
         lugares: lugares,
@@ -730,10 +838,12 @@
           dataSelecionada = null;
           limparSelecao();
           cliqueLinkTaxa = '';
-          grupoCodigo.style.display = 'none';
+          infoHorario.classList.remove('show');
+          infoHorario.innerHTML = '';
+          infoMesas.style.display = 'none';
+          resumoBox.style.display = 'none';
           atualizarBotaoPagamento();
           atualizarVisibilidadeMapa();
-          atualizarObrigatorioObs();
           carregarMesasOcupadas(dataReservada);
         } else {
           var erroTexto = mensagemAmigavel(resp && resp.erro);
@@ -769,7 +879,6 @@
 
     // ===== Inicializa =====
     atualizarVisibilidadeMapa();
-    atualizarObrigatorioObs();
     carregarAgenda();
     carregarLinkTaxa();
   </script>
