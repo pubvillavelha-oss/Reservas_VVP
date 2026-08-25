@@ -154,7 +154,7 @@
 <body>
   <div class="wrapper">
 
-    <!-- ===== 1º CARD: CALENDÁRIO ===== -->
+    <!-- ===== 1º CARD: QUANTIDADE + CALENDÁRIO ===== -->
     <div class="card">
       <div class="logo">
         <h1>🍺 Villa Velha Pub</h1>
@@ -162,7 +162,12 @@
       </div>
       <hr class="divider">
       <div class="form-group">
-        <label for="dataReserva">1. Escolha a data *</label>
+        <label for="quantidadeLugares">1. Quantidade de Pessoas *</label>
+        <input type="number" id="quantidadeLugares" min="1" max="270" placeholder="Ex.: 4" required>
+        <div class="error" id="erroLugares">Informe entre 1 e 270 pessoas.</div>
+      </div>
+      <div class="form-group">
+        <label for="dataReserva">2. Escolha a data *</label>
         <div class="date-wrapper">
           <input type="text" id="dataReserva" class="date-input" placeholder="Selecione a data" readonly>
           <div class="calendar-popup" id="calendarPopup">
@@ -184,7 +189,7 @@
 
     <!-- ===== 2º CARD: MAPA DE MESAS ===== -->
     <div class="card">
-      <p class="mesas-title">🪑 2. Escolha sua mesa</p>
+      <p class="mesas-title">🪑 3. Escolha sua mesa</p>
       <div id="avisoSemData" class="aviso-sem-data">
         <span>📅</span>
         Selecione uma data no calendário acima para ver as mesas disponíveis.
@@ -267,11 +272,6 @@
           <div class="error" id="erroTelefone">Informe um telefone válido com DDD.</div>
         </div>
         <div class="form-group">
-          <label for="quantidadeLugares">Quantidade de Pessoas *</label>
-          <input type="number" id="quantidadeLugares" min="1" max="270" placeholder="Ex.: 4" required>
-          <div class="error" id="erroLugares">Informe entre 1 e 270 pessoas.</div>
-        </div>
-        <div class="form-group">
           <label for="motivoReserva">Motivo da Reserva *</label>
           <select id="motivoReserva" required>
             <option value="" disabled selected>Selecione o motivo</option>
@@ -336,8 +336,8 @@
     const mapaContainer = document.getElementById('mapaContainer');
     const bannerLimite = document.getElementById('bannerLimite');
     const form = document.getElementById('reservaForm');
-    const nomeRes = document.getElementById('nomeReserva');
-       const telefone = document.getElementById('telefone');
+    const nomeReserva = document.getElementById('nomeReserva');
+    const telefone = document.getElementById('telefone');
     const quantidadeLugares = document.getElementById('quantidadeLugares');
     const motivoReserva = document.getElementById('motivoReserva');
     const observacao = document.getElementById('observacao');
@@ -357,18 +357,17 @@
 
     // ===== Estado =====
     const hoje = new Date();
-       hoje.setHours(0, 0, 0, 0);
-    let dataSele = null;
+    hoje.setHours(0, 0, 0, 0);
+    let dataSelecionada = null;
     let mesAtual = hoje.getMonth();
     let anoAtual = hoje.getFullYear();
     let mesaInicial = null;
     let sequenciaSelecionada = [];
-;
-    const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Deembro'];
+    const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
 
     function formatarData(d) {
       const dd = String(d.getDate()).padStart(2, '0');
-      const mm = String(d.getMonth() + ).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
       return d.getFullYear() + '-' + mm + '-' + dd;
     }
 
@@ -376,12 +375,14 @@
     function limparSelecao() {
       mesaInicial = null;
       sequenciaSelecionada = [];
-      document.querySelectorAll('.mesa.selecionada, .mesa.sugerida').forEach(function (m) { m.classList.remove('selecionada', 'sugerida'); });
+      document.querySelectorAll('.mesa.selecionada, .mesa.sugerida').forEach(function (m) {
+        m.classList.remove('selecionada', 'sugerida');
+      });
       mesaInfo.textContent = 'nenhuma';
     }
 
     function atualizarVisibilidadeMapa() {
-      if (dataSe) {
+      if (dataSelecionada) {
         avisoSemData.style.display = 'none';
         mapaContainer.style.display = 'block';
       } else {
@@ -391,14 +392,17 @@
       }
     }
 
-    // ===== Agenda =====
+    // ===== Agenda (hint das atrações) =====
     function carregarAgenda() {
       fetch(APPS_SCRIPT_URL + '?aba=agenda')
         .then(function (res) { return res.json(); })
         .then(function (dados) {
-          if (dados && !dados.error) { AGENDA = dados; renderCalendario(); }
+          if (dados && !dados.error) {
+            AGENDA = dados;
+            renderCalendario();
+          }
         })
-        .catch(function () { AGENDA = {};; });
+        .catch(function () { AGENDA = {}; });
     }
 
     // ===== Link da taxa =====
@@ -414,7 +418,7 @@
 
     function atualizarBotaoPagamento() {
       const tipo = document.querySelector('input[name="tipoReserva"]:checked').value;
-      if ( (tipo === 'garantida') && !limiteAtingido) {
+      if (tipo === 'garantida' && !limiteAtingido) {
         grupoPagamento.style.display = 'block';
         if (linkTaxa) {
           linkPagamento.href = linkTaxa;
@@ -495,13 +499,13 @@
       if (mesAtual < 0) { mesAtual = 11; anoAtual--; }
       renderCalendario();
     });
-    document.getElementById('nextMonth').addEventListener('click', function ((e) {
+    document.getElementById('nextMonth').addEventListener('click', function (e) {
       e.stopPropagation();
       mesAtual++;
       if (mesAtual > 11) { mesAtual = 0; anoAtual++; }
       renderCalendario();
     });
-    document.addEventListener('click', function ((e) {
+    document.addEventListener('click', function (e) {
       if (!e.target.closest('.date-wrapper')) calendarPopup.classList.remove('open');
     });
 
@@ -520,6 +524,13 @@
       else formatted = '(' + digits.slice(0, 2) + ') ' + digits.slice(2, 7) + '-' + digits.slice(7);
       this.value = formatted;
     });
+    // Se a quantidade mudar, limpa a seleção de mesas (a sequência muda)
+    quantidadeLugares.addEventListener('input', function () {
+      limparSelecao();
+      erroMesa.style.display = 'none';
+      erroMesaOcupada.style.display = 'none';
+      erroConflito.style.display = 'none';
+    });
 
     // ===== Lógica de múltiplas mesas =====
     function qtdMesasPorPessoas(lugares) {
@@ -529,7 +540,9 @@
     }
 
     function marcarSequencia(inicio, qtd) {
-      document.querySelectorAll('.mesa.selecionada, .mesa.sugerida').forEach(function (m) { m.classList.remove('selecionada', 'sugerida'); });
+      document.querySelectorAll('.mesa.selecionada, .mesa.sugerida').forEach(function (m) {
+        m.classList.remove('selecionada', 'sugerida');
+      });
       const seq = [];
       for (let i = 0; i < qtd; i++) seq.push(inicio + i);
       seq.forEach(function (n) {
@@ -592,7 +605,6 @@
         const num = parseInt(mesa.getAttribute('data-mesa'), 10);
 
         if (limiteAtingido) {
-          // Modo manual: apenas 1 mesa
           limparSelecao();
           mesaInicial = num;
           sequenciaSelecionada = [num];
@@ -603,7 +615,6 @@
           return;
         }
 
-        // Modo automático: valida a sequência
         const lugares = parseInt(quantidadeLugares.value, 10) || 0;
         const qtd = qtdMesasPorPessoas(lugares);
         if (num + qtd - 1 > MAX_MESA) {
@@ -615,34 +626,24 @@
         for (let i = 0; i < qtd; i++) seq.push(num + i);
         const bloqueada = seq.some(function (n) { return mesasOcupadas.indexOf(n) >= 0; });
         if (bloqueada) {
-          // Busca sugestão no servidor
-          fetch(APPS_SCRIPT_URL + '?aba=verificar&data=' + encodeURIComponent(dataSelecionada) + '&mesa=' + num)
-            .then(function (res) { return res.json(); })
-            .then(function () {
-              // Sugestão local: primeira sequência livre a partir de 1
-              let inicioSug = 1;
-              let achou = false;
-              for (let s = 1; s + qtd - 1 <= MAX_MESA && !achou; s++) {
-                let ok = true;
-                for (let k = 0; k < qtd; k++) if (mesasOcupadas.indexOf(s + k) >= 0) { ok = false; break; }
-                if (ok) { inicioSug = s; achou = true; }
-              }
-              if (achou) {
-                document.querySelectorAll('.mesa.sugerida').forEach(function (m) { m.classList.remove('sugerida'); });
-                for (let k = 0; k < qtd; k++) {
-                  const el = document.querySelector('.mesa[data-mesa="' + (inicioSug + k) + '"]');
-                  if (el) el.classList.add('sugerida');
-                }
-                erroMesaOcupada.textContent = 'A mesa ' + num + ' não comporta ' + lugares + ' pessoas nesta data. Sugestão: mesas ' + inicioSug + ' a ' + (inicioSug + qtd - 1) + '.';
-              } else {
-                erroMesaOcupada.textContent = 'Não há sequência de ' + qtd + ' mesas livres para esta data.';
-              }
-              erroMesaOcupada.style.display = 'block';
-            })
-            .catch(function () {
-              erroMesaOcupada.textContent = 'Não foi possível validar a sequência. Tente novamente.';
-              erroMesaOcupada.style.display = 'block';
-            });
+          let inicioSug = 1;
+          let achou = false;
+          for (let s = 1; s + qtd - 1 <= MAX_MESA && !achou; s++) {
+            let ok = true;
+            for (let k = 0; k < qtd; k++) if (mesasOcupadas.indexOf(s + k) >= 0) { ok = false; break; }
+            if (ok) { inicioSug = s; achou = true; }
+          }
+          if (achou) {
+            document.querySelectorAll('.mesa.sugerida').forEach(function (m) { m.classList.remove('sugerida'); });
+            for (let k = 0; k < qtd; k++) {
+              const el = document.querySelector('.mesa[data-mesa="' + (inicioSug + k) + '"]');
+              if (el) el.classList.add('sugerida');
+            }
+            erroMesaOcupada.textContent = 'A mesa ' + num + ' não comporta ' + lugares + ' pessoas nesta data. Sugestão: mesas ' + inicioSug + ' a ' + (inicioSug + qtd - 1) + '.';
+          } else {
+            erroMesaOcupada.textContent = 'Não há sequência de ' + qtd + ' mesas livres para esta data.';
+          }
+          erroMesaOcupada.style.display = 'block';
           return;
         }
         limparSelecao();
@@ -681,7 +682,6 @@
 
       const tipoReserva = document.querySelector('input[name="tipoReserva"]:checked').value;
       const dataReservada = dataSelecionada;
-      const mesaTexto = sequenciaSelecionada.join(' e ');
       const payload = {
         data: dataReservada,
         mesa: mesaInicial,
