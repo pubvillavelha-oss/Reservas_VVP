@@ -363,10 +363,16 @@
   <script>
     // ===== Configuração =====
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyQgdPbxLYCTl_X1A1-wN8NmrGHkRyKJR6xeOrCopBXS1JujMFAeoonhBNMnLlM1llEbw/exec';
-    const CAPACIDADE_MESA = 6;
-    const LIMITE_PESSOAS = 160;
     const MAX_MESA = 45;
-    const VALOR_MESA = 20; // R$ por mesa
+
+    // Parâmetros carregados da aba "Parâmetros" (com padrões de segurança)
+    let PARAMS = {
+      valorMesa: 20,
+      tempoGarantida: 120,
+      tempoSemGarantia: 60,
+      capacidadeMesa: 6,
+      limitePessoas: 160
+    };
 
     const HORARIOS_ABERTURA = {
       0: { h: 20, m: 0 },
@@ -445,6 +451,15 @@
       const partes = dataStr.split('-').map(Number);
       return { ano: partes[0], mes: partes[1], dia: partes[2] };
     }
+    function formatarDuracao(min) {
+      const m = Number(min) || 0;
+      if (m >= 60) {
+        const h = m / 60;
+        const num = (h % 1 === 0) ? String(h) : String(h).replace('.', ',');
+        return num + ' hora' + (h > 1 ? 's' : '');
+      }
+      return m + ' minutos';
+    }
 
     function obterAbertura(dataStr) {
       const { ano, mes, dia } = quebrarData(dataStr);
@@ -494,7 +509,7 @@
       const lugares = parseInt(quantidadeLugares.value, 10) || 0;
       const qtd = qtdMesasPorPessoas(lugares);
       const tipo = document.querySelector('input[name="tipoReserva"]:checked');
-      const custo = qtd * VALOR_MESA;
+      const custo = qtd * PARAMS.valorMesa;
       const linhas = [];
       linhas.push('<div><strong>Data:</strong> ' + dataBR + (abertura ? ' (abre às ' + formatarHora(abertura.h, abertura.m) + ')' : '') + '</div>');
       if (atracao) linhas.push('<div><strong>Atração:</strong> 🎤 ' + atracao + '</div>');
@@ -502,7 +517,7 @@
       if (sequenciaSelecionada.length) linhas.push('<div><strong>Mesas:</strong> ' + sequenciaSelecionada.join(' e ') + '</div>');
       if (tipo) linhas.push('<div><strong>Tipo:</strong> ' + (tipo.value === 'garantida' ? 'Garantida' : 'Sem garantia') + '</div>');
       if (tipo && tipo.value === 'garantida') {
-        linhas.push('<div><strong>Valor da reserva:</strong> ' + qtd + ' × ' + formatarMoeda(VALOR_MESA) + ' = <strong>' + formatarMoeda(custo) + '</strong></div>');
+        linhas.push('<div><strong>Valor da reserva:</strong> ' + qtd + ' × ' + formatarMoeda(PARAMS.valorMesa) + ' = <strong>' + formatarMoeda(custo) + '</strong></div>');
       }
       resumoConteudo.innerHTML = linhas.join('');
       resumoBox.style.display = 'block';
@@ -511,10 +526,41 @@
     function atualizarValorTaxa() {
       const lugares = parseInt(quantidadeLugares.value, 10) || 0;
       const qtd = qtdMesasPorPessoas(lugares);
-      const custo = qtd * VALOR_MESA;
+      const custo = qtd * PARAMS.valorMesa;
       const taxaPorMesa = document.getElementById('taxaPorMesaTexto');
-      if (taxaPorMesa) taxaPorMesa.textContent = formatarMoeda(VALOR_MESA);
+      if (taxaPorMesa) taxaPorMesa.textContent = formatarMoeda(PARAMS.valorMesa);
       if (linkPagamento) linkPagamento.textContent = '💳 Pagar taxa de ' + formatarMoeda(custo);
+    }
+
+    function atualizarTextosTipos() {
+      const g = document.querySelector('input[name="tipoReserva"][value="garantida"]');
+      const s = document.querySelector('input[name="tipoReserva"][value="sem_garantia"]');
+      if (g) {
+        const small = g.closest('.radio-opt').querySelector('small');
+        if (small) small.innerHTML = 'Mesa reservada por ' + formatarDuracao(PARAMS.tempoGarantida) + ' após a abertura do pub — taxa de <span id="taxaPorMesaTexto">' + formatarMoeda(PARAMS.valorMesa) + '</span> por mesa';
+      }
+      if (s) {
+        const small = s.closest('.radio-opt').querySelector('small');
+        if (small) small.innerHTML = 'Mesa disponível por ' + formatarDuracao(PARAMS.tempoSemGarantia) + ' após a abertura do pub — sem taxa';
+      }
+    }
+
+    function carregarParametros() {
+      fetch(APPS_SCRIPT_URL + '?aba=parametros')
+        .then(function (res) { return res.json(); })
+        .then(function (dados) {
+          if (dados && !dados.error) {
+            if (dados.valorMesa) PARAMS.valorMesa = Number(dados.valorMesa);
+            if (dados.tempoGarantida) PARAMS.tempoGarantida = Number(dados.tempoGarantida);
+            if (dados.tempoSemGarantia) PARAMS.tempoSemGarantia = Number(dados.tempoSemGarantia);
+            if (dados.capacidadeMesa) PARAMS.capacidadeMesa = Number(dados.capacidadeMesa);
+            if (dados.limitePessoas) PARAMS.limitePessoas = Number(dados.limitePessoas);
+            atualizarValorTaxa();
+            atualizarObrigatorioObs();
+            atualizarTextosTipos();
+          }
+        })
+        .catch(function () {});
     }
 
     function carregarAgenda() {
@@ -675,7 +721,7 @@
 
     function atualizarObrigatorioObs() {
       const lugares = parseInt(quantidadeLugares.value, 10) || 0;
-      obsObrigatorio.style.display = (lugares >= LIMITE_PESSOAS) ? 'inline' : 'none';
+      obsObrigatorio.style.display = (lugares >= PARAMS.limitePessoas) ? 'inline' : 'none';
     }
 
     quantidadeLugares.addEventListener('input', function () {
@@ -694,7 +740,7 @@
     function qtdMesasPorPessoas(lugares) {
       const n = Number(lugares) || 0;
       if (n <= 0) return 1;
-      return Math.max(1, Math.ceil(n / CAPACIDADE_MESA));
+      return Math.max(1, Math.ceil(n / PARAMS.capacidadeMesa));
     }
 
     function marcarSequencia(inicio, qtd) {
@@ -729,7 +775,7 @@
           if (dados && Array.isArray(dados.mesasOcupadas)) {
             aplicarOcupadas(dados.mesasOcupadas);
             totalPessoasData = dados.totalPessoas || 0;
-            limiteAtingido = totalPessoasData >= LIMITE_PESSOAS;
+            limiteAtingido = totalPessoasData >= PARAMS.limitePessoas;
             atualizarBannerLimite();
             atualizarBotaoPagamento();
           }
@@ -740,7 +786,7 @@
     function atualizarBannerLimite() {
       if (limiteAtingido) {
         bannerLimite.style.display = 'block';
-        bannerLimite.textContent = '⚠️ Esta data atingiu o limite de ' + LIMITE_PESSOAS + ' pessoas. Selecione uma mesa e registre seus comentários no campo Observação para solicitação manual.';
+        bannerLimite.textContent = '⚠️ Esta data atingiu o limite de ' + PARAMS.limitePessoas + ' pessoas. Selecione uma mesa e registre seus comentários no campo Observação para solicitação manual.';
       } else {
         bannerLimite.style.display = 'none';
       }
@@ -842,7 +888,7 @@
       else { document.getElementById('erroLugares').style.display = 'none'; }
       if (!motivoReserva.value) { document.getElementById('erroMotivo').style.display = 'block'; valido = false; }
       else { document.getElementById('erroMotivo').style.display = 'none'; }
-      if ((lugares >= LIMITE_PESSOAS || limiteAtingido) && !observacao.value.trim()) { erroObs.style.display = 'block'; valido = false; }
+      if ((lugares >= PARAMS.limitePessoas || limiteAtingido) && !observacao.value.trim()) { erroObs.style.display = 'block'; valido = false; }
       else { erroObs.style.display = 'none'; }
       if (sequenciaSelecionada.length === 0) { erroMesa.style.display = 'block'; valido = false; }
       else { erroMesa.style.display = 'none'; }
@@ -882,8 +928,6 @@
         btnEnviar.disabled = false;
         if (resp && resp.ok) {
           mensagemSucesso.style.display = 'block';
-      // Exibe a confirmação e força o refresh da tela
-          setTimeout(function () { location.reload(); }, 2500);
           form.reset();
           contador.textContent = '0 / 200';
           dataSelecionada = null;
@@ -899,6 +943,7 @@
           atualizarBotaoPagamento();
           atualizarVisibilidadeMapa();
           carregarMesasOcupadas(dataReservada);
+          setTimeout(function () { location.reload(); }, 2500);
         } else {
           var erroTexto = mensagemAmigavel(resp && resp.erro);
           if (resp && resp.sugestao) {
@@ -934,6 +979,7 @@
     atualizarVisibilidadeMapa();
     atualizarValorTaxa();
     atualizarObrigatorioObs();
+    carregarParametros();
     carregarAgenda();
     carregarLinkTaxa();
   </script>
