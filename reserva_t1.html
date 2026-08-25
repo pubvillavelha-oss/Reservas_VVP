@@ -113,6 +113,11 @@
     .mesa.selecionada { background: #e0b84d; border-color: #e0b84d; color: #1a0f0a; box-shadow: 0 0 0 3px rgba(224,184,77,0.35); }
     .mesa-info { margin-top: 10px; font-size: 13px; color: #b89a6a; text-align: center; }
     .mesa-info span { color: #e0b84d; font-weight: 700; }
+    .aviso-sem-data {
+      text-align: center; padding: 26px 18px; border: 1px dashed #6b4f2e;
+      border-radius: 12px; color: #b89a6a; font-size: 14px; line-height: 1.6;
+    }
+    .aviso-sem-data span { font-size: 26px; display: block; margin-bottom: 8px; }
 
     .radio-group { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
     .radio-opt { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
@@ -144,94 +149,107 @@
 <body>
   <div class="wrapper">
 
-    <div class="card">
-      <p class="mesas-title">🪑 Escolha sua mesa</p>
-      <div class="mesa-legend">
-        <span class="item"><i class="swatch swatch-avail"></i>Disponível</span>
-        <span class="item"><i class="swatch swatch-occ"></i>Ocupada</span>
-        <span class="item"><i class="swatch swatch-sel"></i>Selecionada</span>
-      </div>
-      <div class="mesas-map">
-        <img src="https://raw.githubusercontent.com/pubvillavelha-oss/Reservas_VVP/main/MAPA%20SALAO%20VVP.png" alt="Mapa do salão do Villa Velha Pub">
-        <!-- LADO ESQUERDO -->
-        <div class="mesa" data-mesa="20" style="left:44%;top:22%">20</div>
-        <div class="mesa" data-mesa="19" style="left:44%;top:34%">19</div>
-        <div class="mesa" data-mesa="14" style="left:33%;top:34%">14</div>
-        <div class="mesa" data-mesa="9"  style="left:23%;top:34%">9</div>
-        <div class="mesa" data-mesa="4"  style="left:12%;top:46%">4</div>
-        <div class="mesa" data-mesa="8"  style="left:23%;top:46%">8</div>
-        <div class="mesa" data-mesa="13" style="left:33%;top:46%">13</div>
-        <div class="mesa" data-mesa="18" style="left:44%;top:46%">18</div>
-        <div class="mesa" data-mesa="3"  style="left:12%;top:58%">3</div>
-        <div class="mesa" data-mesa="7"  style="left:23%;top:58%">7</div>
-        <div class="mesa" data-mesa="12" style="left:33%;top:58%">12</div>
-        <div class="mesa" data-mesa="17" style="left:44%;top:58%">17</div>
-        <div class="mesa" data-mesa="2"  style="left:12%;top:70%">2</div>
-        <div class="mesa" data-mesa="6"  style="left:23%;top:70%">6</div>
-        <div class="mesa" data-mesa="11" style="left:33%;top:70%">11</div>
-        <div class="mesa" data-mesa="16" style="left:44%;top:70%">16</div>
-        <div class="mesa" data-mesa="1"  style="left:12%;top:82%">1</div>
-        <div class="mesa" data-mesa="5"  style="left:23%;top:82%">5</div>
-        <div class="mesa" data-mesa="10" style="left:33%;top:82%">10</div>
-        <div class="mesa" data-mesa="15" style="left:44%;top:82%">15</div>
-        <!-- LADO DIREITO -->
-        <div class="mesa" data-mesa="27" style="left:60%;top:10%">27</div>
-        <div class="mesa" data-mesa="34" style="left:71%;top:10%">34</div>
-        <div class="mesa" data-mesa="41" style="left:82%;top:10%">41</div>
-        <div class="mesa" data-mesa="45" style="left:92%;top:10%">45</div>
-        <div class="mesa" data-mesa="26" style="left:60%;top:22%">26</div>
-        <div class="mesa" data-mesa="33" style="left:71%;top:22%">33</div>
-        <div class="mesa" data-mesa="40" style="left:82%;top:22%">40</div>
-        <div class="mesa" data-mesa="44" style="left:92%;top:22%">44</div>
-        <div class="mesa" data-mesa="25" style="left:60%;top:34%">25</div>
-        <div class="mesa" data-mesa="32" style="left:71%;top:34%">32</div>
-        <div class="mesa" data-mesa="39" style="left:82%;top:34%">39</div>
-        <div class="mesa" data-mesa="43" style="left:92%;top:34%">43</div>
-        <div class="mesa" data-mesa="24" style="left:60%;top:46%">24</div>
-        <div class="mesa" data-mesa="31" style="left:71%;top:46%">31</div>
-        <div class="mesa" data-mesa="38" style="left:82%;top:46%">38</div>
-        <div class="mesa" data-mesa="42" style="left:92%;top:46%">42</div>
-        <div class="mesa" data-mesa="23" style="left:60%;top:58%">23</div>
-        <div class="mesa" data-mesa="30" style="left:71%;top:58%">30</div>
-        <div class="mesa" data-mesa="37" style="left:82%;top:58%">37</div>
-        <div class="mesa" data-mesa="22" style="left:60%;top:70%">22</div>
-        <div class="mesa" data-mesa="29" style="left:71%;top:70%">29</div>
-        <div class="mesa" data-mesa="36" style="left:82%;top:70%">36</div>
-        <div class="mesa" data-mesa="21" style="left:60%;top:82%">21</div>
-        <div class="mesa" data-mesa="28" style="left:71%;top:82%">28</div>
-        <div class="mesa" data-mesa="35" style="left:82%;top:82%">35</div>
-      </div>
-      <div class="mesa-info">Mesa selecionada: <span id="mesaInfo">nenhuma</span></div>
-      <div class="error" id="erroMesa">Selecione uma mesa para continuar.</div>
-      <div class="error" id="erroConflito">Esta mesa acabou de ser reservada para a data escolhida. Selecione outra mesa.</div>
-    </div>
-
+    <!-- ===== 1º CARD: CALENDÁRIO (escolha da data) ===== -->
     <div class="card">
       <div class="logo">
         <h1>🍺 Villa Velha Pub</h1>
         <p>Reserva de Mesas</p>
       </div>
       <hr class="divider">
-      <form id="reservaForm" novalidate>
-        <div class="form-group">
-          <label for="dataReserva">Data de Reserva *</label>
-          <div class="date-wrapper">
-            <input type="text" id="dataReserva" class="date-input" placeholder="Selecione a data" readonly>
-            <div class="calendar-popup" id="calendarPopup">
-              <div class="cal-header">
-                <button type="button" id="prevMonth">◀</button>
-                <span class="cal-title" id="calTitle"></span>
-                <button type="button" id="nextMonth">▶</button>
-              </div>
-              <div class="cal-weekdays">
-                <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span>
-                <span>Qui</span><span>Sex</span><span>Sáb</span>
-              </div>
-              <div class="cal-days" id="calDays"></div>
+      <div class="form-group">
+        <label for="dataReserva">1. Escolha a data *</label>
+        <div class="date-wrapper">
+          <input type="text" id="dataReserva" class="date-input" placeholder="Selecione a data" readonly>
+          <div class="calendar-popup" id="calendarPopup">
+            <div class="cal-header">
+              <button type="button" id="prevMonth">◀</button>
+              <span class="cal-title" id="calTitle"></span>
+              <button type="button" id="nextMonth">▶</button>
             </div>
+            <div class="cal-weekdays">
+              <span>Dom</span><span>Seg</span><span>Ter</span><span>Qua</span>
+              <span>Qui</span><span>Sex</span><span>Sáb</span>
+            </div>
+            <div class="cal-days" id="calDays"></div>
           </div>
-          <div class="error" id="erroData">Selecione uma data válida (hoje ou futura).</div>
         </div>
+        <div class="error" id="erroData">Selecione uma data válida (hoje ou futura).</div>
+      </div>
+    </div>
+
+    <!-- ===== 2º CARD: MAPA DE MESAS (oculto até escolher a data) ===== -->
+    <div class="card">
+      <p class="mesas-title">🪑 2. Escolha sua mesa</p>
+      <div id="avisoSemData" class="aviso-sem-data">
+        <span>📅</span>
+        Selecione uma data no calendário acima para ver as mesas disponíveis.
+      </div>
+      <div id="mapaContainer" style="display:none;">
+        <div class="mesa-legend">
+          <span class="item"><i class="swatch swatch-avail"></i>Disponível</span>
+          <span class="item"><i class="swatch swatch-occ"></i>Ocupada</span>
+          <span class="item"><i class="swatch swatch-sel"></i>Selecionada</span>
+        </div>
+        <div class="mesas-map">
+          <img src="https://raw.githubusercontent.com/pubvillavelha-oss/Reservas_VVP/main/MAPA%20SALAO%20VVP.png" alt="Mapa do salão do Villa Velha Pub">
+          <!-- LADO ESQUERDO -->
+          <div class="mesa" data-mesa="20" style="left:44%;top:22%">20</div>
+          <div class="mesa" data-mesa="19" style="left:44%;top:34%">19</div>
+          <div class="mesa" data-mesa="14" style="left:33%;top:34%">14</div>
+          <div class="mesa" data-mesa="9"  style="left:23%;top:34%">9</div>
+          <div class="mesa" data-mesa="4"  style="left:12%;top:46%">4</div>
+          <div class="mesa" data-mesa="8"  style="left:23%;top:46%">8</div>
+          <div class="mesa" data-mesa="13" style="left:33%;top:46%">13</div>
+          <div class="mesa" data-mesa="18" style="left:44%;top:46%">18</div>
+          <div class="mesa" data-mesa="3"  style="left:12%;top:58%">3</div>
+          <div class="mesa" data-mesa="7"  style="left:23%;top:58%">7</div>
+          <div class="mesa" data-mesa="12" style="left:33%;top:58%">12</div>
+          <div class="mesa" data-mesa="17" style="left:44%;top:58%">17</div>
+          <div class="mesa" data-mesa="2"  style="left:12%;top:70%">2</div>
+          <div class="mesa" data-mesa="6"  style="left:23%;top:70%">6</div>
+          <div class="mesa" data-mesa="11" style="left:33%;top:70%">11</div>
+          <div class="mesa" data-mesa="16" style="left:44%;top:70%">16</div>
+          <div class="mesa" data-mesa="1"  style="left:12%;top:82%">1</div>
+          <div class="mesa" data-mesa="5"  style="left:23%;top:82%">5</div>
+          <div class="mesa" data-mesa="10" style="left:33%;top:82%">10</div>
+          <div class="mesa" data-mesa="15" style="left:44%;top:82%">15</div>
+          <!-- LADO DIREITO -->
+          <div class="mesa" data-mesa="27" style="left:60%;top:10%">27</div>
+          <div class="mesa" data-mesa="34" style="left:71%;top:10%">34</div>
+          <div class="mesa" data-mesa="41" style="left:82%;top:10%">41</div>
+          <div class="mesa" data-mesa="45" style="left:92%;top:10%">45</div>
+          <div class="mesa" data-mesa="26" style="left:60%;top:22%">26</div>
+          <div class="mesa" data-mesa="33" style="left:71%;top:22%">33</div>
+          <div class="mesa" data-mesa="40" style="left:82%;top:22%">40</div>
+          <div class="mesa" data-mesa="44" style="left:92%;top:22%">44</div>
+          <div class="mesa" data-mesa="25" style="left:60%;top:34%">25</div>
+          <div class="mesa" data-mesa="32" style="left:71%;top:34%">32</div>
+          <div class="mesa" data-mesa="39" style="left:82%;top:34%">39</div>
+          <div class="mesa" data-mesa="43" style="left:92%;top:34%">43</div>
+          <div class="mesa" data-mesa="24" style="left:60%;top:46%">24</div>
+          <div class="mesa" data-mesa="31" style="left:71%;top:46%">31</div>
+          <div class="mesa" data-mesa="38" style="left:82%;top:46%">38</div>
+          <div class="mesa" data-mesa="42" style="left:92%;top:46%">42</div>
+          <div class="mesa" data-mesa="23" style="left:60%;top:58%">23</div>
+          <div class="mesa" data-mesa="30" style="left:71%;top:58%">30</div>
+          <div class="mesa" data-mesa="37" style="left:82%;top:58%">37</div>
+          <div class="mesa" data-mesa="22" style="left:60%;top:70%">22</div>
+          <div class="mesa" data-mesa="29" style="left:71%;top:70%">29</div>
+          <div class="mesa" data-mesa="36" style="left:82%;top:70%">36</div>
+          <div class="mesa" data-mesa="21" style="left:60%;top:82%">21</div>
+          <div class="mesa" data-mesa="28" style="left:71%;top:82%">28</div>
+          <div class="mesa" data-mesa="35" style="left:82%;top:82%">35</div>
+        </div>
+        <div class="mesa-info">Mesa selecionada: <span id="mesaInfo">nenhuma</span></div>
+        <div class="error" id="erroMesa">Selecione uma mesa para continuar.</div>
+        <div class="error" id="erroMesaOcupada">Esta mesa já está reservada para a data escolhida. Escolha outra mesa.</div>
+        <div class="error" id="erroConflito">Esta mesa acabou de ser reservada para a data escolhida. Selecione outra mesa.</div>
+      </div>
+    </div>
+
+    <!-- ===== 3º CARD: DADOS DA RESERVA ===== -->
+    <div class="card">
+      <form id="reservaForm" novalidate>
         <div class="form-group">
           <label for="nomeReserva">Nome da Reserva *</label>
           <input type="text" id="nomeReserva" placeholder="Ex.: João Silva" maxlength="60" required>
@@ -296,11 +314,13 @@
     let linkTaxa = null;
     let cliqueLinkTaxa = '';   // data/hora do clique no botão de pagamento
 
-    // ===== Elementos do DOM (declarados ANTES de qualquer uso) =====
+    // ===== Elementos do DOM =====
     const dataReserva = document.getElementById('dataReserva');
     const calendarPopup = document.getElementById('calendarPopup');
     const calTitle = document.getElementById('calTitle');
     const calDays = document.getElementById('calDays');
+    const avisoSemData = document.getElementById('avisoSemData');
+    const mapaContainer = document.getElementById('mapaContainer');
     const form = document.getElementById('reservaForm');
     const nomeReserva = document.getElementById('nomeReserva');
     const telefone = document.getElementById('telefone');
@@ -316,6 +336,7 @@
     const erroPagamento = document.getElementById('erroPagamento');
     const mesaInfo = document.getElementById('mesaInfo');
     const erroMesa = document.getElementById('erroMesa');
+    const erroMesaOcupada = document.getElementById('erroMesaOcupada');
     const erroConflito = document.getElementById('erroConflito');
 
     // ===== Estado =====
@@ -332,6 +353,24 @@
       return d.getFullYear() + '-' + mm + '-' + dd;
     }
 
+    // ===== Controle de visibilidade do mapa (fluxo em etapas) =====
+    function limparSelecaoMesa() {
+      mesaSelecionada = null;
+      document.querySelectorAll('.mesa.selecionada').forEach(function (m) { m.classList.remove('selecionada'); });
+      mesaInfo.textContent = 'nenhuma';
+    }
+
+    function atualizarVisibilidadeMapa() {
+      if (dataSelecionada) {
+        avisoSemData.style.display = 'none';
+        mapaContainer.style.display = 'block';
+      } else {
+        avisoSemData.style.display = 'block';
+        mapaContainer.style.display = 'none';
+        limparSelecaoMesa();
+      }
+    }
+
     // ===== Agenda (hint das atrações) =====
     function carregarAgenda() {
       fetch(APPS_SCRIPT_URL + '?aba=agenda')
@@ -345,7 +384,7 @@
         .catch(function () { AGENDA = {}; });
     }
 
-    // ===== Link da taxa — aba Pagamento, célula A2 =====
+    // ===== Link da taxa =====
     function carregarLinkTaxa() {
       fetch(APPS_SCRIPT_URL + '?aba=pagamento')
         .then(function (res) { return res.json(); })
@@ -377,7 +416,6 @@
       radio.addEventListener('change', atualizarBotaoPagamento);
     });
 
-    // Registra a data/hora do clique no link de pagamento
     linkPagamento.addEventListener('click', function () {
       cliqueLinkTaxa = new Date().toLocaleString('pt-BR');
     });
@@ -418,8 +456,11 @@
             dataReserva.value = dia + '/' + (mesAtual + 1) + '/' + anoAtual;
             calendarPopup.classList.remove('open');
             erroConflito.style.display = 'none';
+            erroMesaOcupada.style.display = 'none';
+            limparSelecaoMesa();                 // mesa pode estar ocupada na nova data
             renderCalendario();
-            carregarMesasOcupadas(dataStr);
+            atualizarVisibilidadeMapa();          // mostra o mapa da data escolhida
+            carregarMesasOcupadas(dataStr);       // força a busca das mesas da data
           });
         }
         calDays.appendChild(celula);
@@ -490,7 +531,7 @@
         .then(function (res) { return res.json(); })
         .then(function (dados) {
           if (dados && dados.error) {
-            console.warn('mesas:', dados.error); // falha silenciosa — o doPost ainda protege a gravação
+            console.warn('mesas:', dados.error);
           }
           if (dados && Array.isArray(dados.mesasOcupadas)) aplicarOcupadas(dados.mesasOcupadas);
         })
@@ -501,7 +542,13 @@
       const num = parseInt(mesa.getAttribute('data-mesa'), 10);
       if (MESAS_OCUPADAS_FIXAS.indexOf(num) >= 0) mesa.classList.add('ocupada');
       mesa.addEventListener('click', function () {
-        if (mesa.classList.contains('ocupada')) return;
+        // Mesa reservada: recomenda escolher outra em vez de ignorar silenciosamente
+        if (mesa.classList.contains('ocupada')) {
+          erroMesaOcupada.textContent = 'A mesa ' + num + ' já está reservada para a data escolhida (' + (dataReserva.value || '?') + '). Escolha outra mesa disponível.';
+          erroMesaOcupada.style.display = 'block';
+          return;
+        }
+        erroMesaOcupada.style.display = 'none';
         if (mesaSelecionada === num) {
           mesaSelecionada = null;
           mesa.classList.remove('selecionada');
@@ -516,11 +563,12 @@
       });
     });
 
-    // ===== Envio (lê a resposta do servidor) =====
+    // ===== Envio =====
     form.addEventListener('submit', function (e) {
       e.preventDefault();
       mensagemSucesso.style.display = 'none';
       erroConflito.style.display = 'none';
+      erroMesaOcupada.style.display = 'none';
       let valido = true;
       if (!dataSelecionada) { document.getElementById('erroData').style.display = 'block'; valido = false; }
       else { document.getElementById('erroData').style.display = 'none'; }
@@ -557,8 +605,6 @@
       btnEnviar.disabled = true;
       loading.style.display = 'block';
 
-      // POST legível (sem no-cors): o navegador lê ok/erro do servidor.
-      // IMPORTANTE: o Apps Script precisa estar publicado com acesso "Qualquer pessoa".
       fetch(APPS_SCRIPT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
@@ -579,9 +625,9 @@
           document.querySelectorAll('.mesa.selecionada').forEach(function (m) { m.classList.remove('selecionada'); });
           mesaInfo.textContent = 'nenhuma';
           atualizarBotaoPagamento();
+          atualizarVisibilidadeMapa();   // volta ao aviso "selecione uma data"
           carregarMesasOcupadas(dataReservada);
         } else {
-          // Só marca a mesa como ocupada quando é conflito real de mesa
           var erroTexto = mensagemAmigavel(resp && resp.erro);
           if (resp && /^Mesa \d+ já reservada para esta data/.test(String(resp.erro || ''))) {
             document.querySelectorAll('.mesa[data-mesa="' + mesaReservada + '"]').forEach(function (m) {
@@ -602,18 +648,19 @@
       });
     });
 
-function mensagemAmigavel(erro) {
-  if (!erro) return 'Não foi possível registrar a reserva. Tente novamente.';
-  var e = String(erro);
-  var m = e.match(/^Mesa (\d+) já reservada para esta data/);
-  if (m) return 'A mesa ' + m[1] + ' já foi reservada para esta data. Selecione outra mesa.';
-  if (e.indexOf('ERRO DE CONFIGURAÇÃO') > -1) return 'Configuração pendente: não foi possível ler as datas da planilha. Fale com a gente pelo WhatsApp (14) 99111-7806 ou tente novamente em instantes.';
-  if (e.indexOf('Sistema ocupado') > -1) return 'O sistema está processando outro pedido no momento. Tente novamente em instantes.';
-  if (e.indexOf('Data inválida') > -1) return 'A data escolhida não é válida. Selecione outra data.';
-  return e;
-}
+    function mensagemAmigavel(erro) {
+      if (!erro) return 'Não foi possível registrar a reserva. Tente novamente.';
+      var e = String(erro);
+      var m = e.match(/^Mesa (\d+) já reservada para esta data/);
+      if (m) return 'A mesa ' + m[1] + ' já foi reservada para esta data. Selecione outra mesa.';
+      if (e.indexOf('ERRO DE CONFIGURAÇÃO') > -1) return 'Configuração pendente: não foi possível ler as datas da planilha. Fale com a gente pelo WhatsApp (14) 99111-7806 ou tente novamente em instantes.';
+      if (e.indexOf('Sistema ocupado') > -1) return 'O sistema está processando outro pedido no momento. Tente novamente em instantes.';
+      if (e.indexOf('Data inválida') > -1) return 'A data escolhida não é válida. Selecione outra data.';
+      return e;
+    }
 
     // ===== Inicializa =====
+    atualizarVisibilidadeMapa();   // começa com o aviso "selecione uma data"
     carregarAgenda();
     carregarLinkTaxa();
   </script>
