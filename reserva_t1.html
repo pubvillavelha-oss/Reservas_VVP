@@ -284,10 +284,10 @@
           <div class="error" id="erroMotivo">Selecione o motivo da reserva.</div>
         </div>
         <div class="form-group">
-          <label for="observacao">Observação <span id="obsObligatorio" style="color:#e05d4d;display:none;">(obrigatória — limite de 160 atingido)</span></label>
+          <label for="observacao">Observação <span id="obsObrigatorio" style="color:#e05d4d;display:none;">(obrigatória — 160+ pessoas)</span></label>
           <textarea id="observacao" rows="3" maxlength="200" placeholder="Máx. 200 caracteres"></textarea>
           <div class="char-counter" id="contador">0 / 200</div>
-          <div class="error" id="erroObs">O campo Observação é obrigatório nesta data.</div>
+          <div class="error" id="erroObs">Para 160 ou mais pessoas, o campo Observação é obrigatório.</div>
         </div>
         <div class="form-group">
           <label>Tipo de Reserva *</label>
@@ -306,6 +306,11 @@
           <label>Pagamento da taxa de reserva</label>
           <a href="#" id="linkPagamento" class="btn-pagamento" target="_blank" rel="noopener">💳 Pagar taxa de reserva</a>
           <div class="error" id="erroPagamento">Link de pagamento não configurado na planilha.</div>
+          <div class="form-group" id="grupoCodigo" style="margin-top:12px;margin-bottom:0;display:none;">
+            <label for="codigoTransacao">Código da transação (ID do pagamento) *</label>
+            <input type="text" id="codigoTransacao" placeholder="Cole aqui o código da transação" maxlength="60">
+            <div class="error" id="erroCodigo">Informe o código da transação do pagamento.</div>
+          </div>
         </div>
         <button type="submit" class="btn" id="btnEnviar">Confirmar Reserva</button>
         <div class="loading" id="loading">Enviando reserva...</div>
@@ -342,7 +347,7 @@
     const motivoReserva = document.getElementById('motivoReserva');
     const observacao = document.getElementById('observacao');
     const contador = document.getElementById('contador');
-    const obsObl = document.getElementById('obsObligatorio');
+    const obsObrigatorio = document.getElementById('obsObrigatorio');
     const erroObs = document.getElementById('erroObs');
     const mensagemSucesso = document.getElementById('mensagemSucesso');
     const loading = document.getElementById('loading');
@@ -350,6 +355,9 @@
     const grupoPagamento = document.getElementById('grupoPagamento');
     const linkPagamento = document.getElementById('linkPagamento');
     const erroPagamento = document.getElementById('erroPagamento');
+    const grupoCodigo = document.getElementById('grupoCodigo');
+    const codigoTransacao = document.getElementById('codigoTransacao');
+    const erroCodigo = document.getElementById('erroCodigo');
     const mesaInfo = document.getElementById('mesaInfo');
     const erroMesa = document.getElementById('erroMesa');
     const erroMesaOcupada = document.getElementById('erroMesaOcupada');
@@ -418,7 +426,7 @@
 
     function atualizarBotaoPagamento() {
       const tipo = document.querySelector('input[name="tipoReserva"]:checked').value;
-      if (tipo === 'garantida' && !limiteAtingido) {
+      if (tipo === 'garantida') {
         grupoPagamento.style.display = 'block';
         if (linkTaxa) {
           linkPagamento.href = linkTaxa;
@@ -430,6 +438,7 @@
         }
       } else {
         grupoPagamento.style.display = 'none';
+        grupoCodigo.style.display = 'none';
       }
     }
 
@@ -437,8 +446,10 @@
       radio.addEventListener('change', atualizarBotaoPagamento);
     });
 
+    // Campo do código aparece APÓS clicar no botão "Pagar taxa"
     linkPagamento.addEventListener('click', function () {
       cliqueLinkTaxa = new Date().toLocaleString('pt-BR');
+      grupoCodigo.style.display = 'block';
     });
 
     // ===== Calendário =====
@@ -524,12 +535,18 @@
       else formatted = '(' + digits.slice(0, 2) + ') ' + digits.slice(2, 7) + '-' + digits.slice(7);
       this.value = formatted;
     });
-    // Se a quantidade mudar, limpa a seleção de mesas (a sequência muda)
+
+    // Observação obrigatória quando quantidade >= 160
+    function atualizarObrigatorioObs() {
+      const lugares = parseInt(quantidadeLugares.value, 10) || 0;
+      obsObrigatorio.style.display = (lugares >= LIMITE_PESSOAS) ? 'inline' : 'none';
+    }
     quantidadeLugares.addEventListener('input', function () {
       limparSelecao();
       erroMesa.style.display = 'none';
       erroMesaOcupada.style.display = 'none';
       erroConflito.style.display = 'none';
+      atualizarObrigatorioObs();
     });
 
     // ===== Lógica de múltiplas mesas =====
@@ -574,8 +591,6 @@
             totalPessoasData = dados.totalPessoas || 0;
             limiteAtingido = totalPessoasData >= LIMITE_PESSOAS;
             atualizarBannerLimite();
-            atualizarBotaoPagamento();
-            atualizarObrigatorioObs();
           }
         })
         .catch(function () {});
@@ -588,10 +603,6 @@
       } else {
         bannerLimite.style.display = 'none';
       }
-    }
-
-    function atualizarObrigatorioObs() {
-      obsObl.style.display = limiteAtingido ? 'inline' : 'none';
     }
 
     document.querySelectorAll('.mesa').forEach(function (mesa) {
@@ -674,10 +685,14 @@
       else { document.getElementById('erroLugares').style.display = 'none'; }
       if (!motivoReserva.value) { document.getElementById('erroMotivo').style.display = 'block'; valido = false; }
       else { document.getElementById('erroMotivo').style.display = 'none'; }
-      if (limiteAtingido && !observacao.value.trim()) { erroObs.style.display = 'block'; valido = false; }
+      // Observação obrigatória para 160+ pessoas
+      if (lugares >= LIMITE_PESSOAS && !observacao.value.trim()) { erroObs.style.display = 'block'; valido = false; }
       else { erroObs.style.display = 'none'; }
       if (sequenciaSelecionada.length === 0) { erroMesa.style.display = 'block'; valido = false; }
       else { erroMesa.style.display = 'none'; }
+      // Código da transação obrigatório se o grupo de pagamento estiver visível
+      if (grupoCodigo.style.display === 'block' && !codigoTransacao.value.trim()) { erroCodigo.style.display = 'block'; valido = false; }
+      else { erroCodigo.style.display = 'none'; }
       if (!valido) return;
 
       const tipoReserva = document.querySelector('input[name="tipoReserva"]:checked').value;
@@ -688,6 +703,7 @@
         tipoReserva: tipoReserva,
         linkTaxa: linkTaxa,
         linkClique: cliqueLinkTaxa,
+        codigoTransacao: codigoTransacao.value.trim(),
         nome: nomeReserva.value.trim(),
         telefone: telefone.value.trim(),
         lugares: lugares,
@@ -714,8 +730,10 @@
           dataSelecionada = null;
           limparSelecao();
           cliqueLinkTaxa = '';
+          grupoCodigo.style.display = 'none';
           atualizarBotaoPagamento();
           atualizarVisibilidadeMapa();
+          atualizarObrigatorioObs();
           carregarMesasOcupadas(dataReservada);
         } else {
           var erroTexto = mensagemAmigavel(resp && resp.erro);
@@ -751,6 +769,7 @@
 
     // ===== Inicializa =====
     atualizarVisibilidadeMapa();
+    atualizarObrigatorioObs();
     carregarAgenda();
     carregarLinkTaxa();
   </script>
