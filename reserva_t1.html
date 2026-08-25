@@ -28,7 +28,7 @@
     }
     select {
       appearance: none; -webkit-appearance: none;
-      background-image: ("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23e0b84d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23e0b84d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
       background-repeat: no-repeat; background-position: right 14px center; cursor: pointer;
     }
     select option { background: #2b1a0e; color: #f5e9dc; }
@@ -291,7 +291,6 @@
   </div>
   <script>
     // ===== Configuração =====
-                            
     const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyQgdPbxLYCTl_X1A1-wN8NmrGHkRyKJR6xeOrCopBXS1JujMFAeoonhBNMnLlM1llEbw/exec';
     let AGENDA = {};
     let linkTaxa = null;
@@ -490,6 +489,9 @@
       fetch(APPS_SCRIPT_URL + '?aba=mesas&data=' + encodeURIComponent(dataStr))
         .then(function (res) { return res.json(); })
         .then(function (dados) {
+          if (dados && dados.error) {
+            console.warn('mesas:', dados.error); // falha silenciosa — o doPost ainda protege a gravação
+          }
           if (dados && Array.isArray(dados.mesasOcupadas)) aplicarOcupadas(dados.mesasOcupadas);
         })
         .catch(function () {});
@@ -579,12 +581,16 @@
           atualizarBotaoPagamento();
           carregarMesasOcupadas(dataReservada);
         } else {
-          document.querySelectorAll('.mesa[data-mesa="' + mesaReservada + '"]').forEach(function (m) {
-            m.classList.add('ocupada', 'ocupada-dinamica');
-          });
-          mesaSelecionada = null;
-          mesaInfo.textContent = 'nenhuma';
-          erroConflito.textContent = mensagemAmigavel(resp && resp.erro);
+          // Só marca a mesa como ocupada quando é conflito real de mesa
+          var erroTexto = mensagemAmigavel(resp && resp.erro);
+          if (resp && /^Mesa \d+ já reservada para esta data/.test(String(resp.erro || ''))) {
+            document.querySelectorAll('.mesa[data-mesa="' + mesaReservada + '"]').forEach(function (m) {
+              m.classList.add('ocupada', 'ocupada-dinamica');
+            });
+            mesaSelecionada = null;
+            mesaInfo.textContent = 'nenhuma';
+          }
+          erroConflito.textContent = erroTexto;
           erroConflito.style.display = 'block';
           carregarMesasOcupadas(dataReservada);
         }
@@ -596,12 +602,16 @@
       });
     });
 
-    function mensagemAmigavel(erro) {
-      if (!erro) return 'Não foi possível registrar a reserva. Tente novamente.';
-      var m = String(erro).match(/^Mesa (\d+) já reservada para esta data/);
-      if (m) return 'A mesa ' + m[1] + ' já foi reservada para esta data. Selecione outra mesa.';
-      return String(erro);
-    }
+function mensagemAmigavel(erro) {
+  if (!erro) return 'Não foi possível registrar a reserva. Tente novamente.';
+  var e = String(erro);
+  var m = e.match(/^Mesa (\d+) já reservada para esta data/);
+  if (m) return 'A mesa ' + m[1] + ' já foi reservada para esta data. Selecione outra mesa.';
+  if (e.indexOf('ERRO DE CONFIGURAÇÃO') > -1) return 'Configuração pendente: não foi possível ler as datas da planilha. Fale com a gente pelo WhatsApp (14) 99111-7806 ou tente novamente em instantes.';
+  if (e.indexOf('Sistema ocupado') > -1) return 'O sistema está processando outro pedido no momento. Tente novamente em instantes.';
+  if (e.indexOf('Data inválida') > -1) return 'A data escolhida não é válida. Selecione outra data.';
+  return e;
+}
 
     // ===== Inicializa =====
     carregarAgenda();
