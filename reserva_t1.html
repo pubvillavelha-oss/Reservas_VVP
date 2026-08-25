@@ -882,6 +882,8 @@
         btnEnviar.disabled = false;
         if (resp && resp.ok) {
           mensagemSucesso.style.display = 'block';
+      // Exibe a confirmação e força o refresh da tela
+          setTimeout(function () { location.reload(); }, 2500);
           form.reset();
           contador.textContent = '0 / 200';
           dataSelecionada = null;
