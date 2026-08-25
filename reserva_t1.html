@@ -317,11 +317,11 @@
           <div class="radio-group">
             <label class="radio-opt">
               <input type="radio" name="tipoReserva" value="garantida" checked>
-              <span><strong>Reserva Garantida</strong><small>Mesa reservada por 1:30 hora após a abertura do pub — taxa de <span id="taxaPorMesaTexto">R$ 20,00</span> por mesa</small></span>
+              <span><strong>Reserva Garantida</strong><small>Mesa reservada por 1 hora após a abertura do pub — taxa de <span id="taxaPorMesaTexto">R$ 20,00</span> por mesa</small></span>
             </label>
             <label class="radio-opt">
               <input type="radio" name="tipoReserva" value="sem_garantia">
-              <span><strong>Reserva Sem Garantia</strong><small>Mesa disponível por 30 minutos após a abertura do pub — sem taxa</small></span>
+              <span><strong>Reserva Sem Garantia</strong><small>Mesa disponível por 20 minutos após a abertura do pub — sem taxa</small></span>
             </label>
           </div>
         </div>
@@ -475,18 +475,20 @@
       }
     }
 
-    // ===== Resumo da reserva (com custo) =====
+    // ===== Resumo da reserva (com atração e custo) =====
     function atualizarResumo() {
       if (!dataSelecionada) { resumoBox.style.display = 'none'; return; }
       const partes = dataSelecionada.split('-');
       const dataBR = partes[2] + '/' + partes[1] + '/' + partes[0];
       const abertura = obterAbertura(dataSelecionada);
+      const atracao = AGENDA[dataSelecionada];
       const lugares = parseInt(quantidadeLugares.value, 10) || 0;
       const qtd = qtdMesasPorPessoas(lugares);
       const tipo = document.querySelector('input[name="tipoReserva"]:checked');
       const custo = qtd * VALOR_MESA;
       const linhas = [];
       linhas.push('<div><strong>Data:</strong> ' + dataBR + (abertura ? ' (abre às ' + formatarHora(abertura.h, abertura.m) + ')' : '') + '</div>');
+      if (atracao) linhas.push('<div><strong>Atração:</strong> 🎤 ' + atracao + '</div>');
       if (lugares) linhas.push('<div><strong>Pessoas:</strong> ' + lugares + ' (' + qtd + ' mesa' + (qtd > 1 ? 's' : '') + ')</div>');
       if (sequenciaSelecionada.length) linhas.push('<div><strong>Mesas:</strong> ' + sequenciaSelecionada.join(' e ') + '</div>');
       if (tipo) linhas.push('<div><strong>Tipo:</strong> ' + (tipo.value === 'garantida' ? 'Garantida' : 'Sem garantia') + '</div>');
@@ -515,6 +517,7 @@
           if (dados && !dados.error) {
             AGENDA = dados;
             renderCalendario();
+            atualizarResumo(); // re-renderiza o resumo com a atração
           }
         })
         .catch(function () { AGENDA = {}; });
