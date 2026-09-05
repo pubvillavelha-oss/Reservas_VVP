@@ -108,12 +108,10 @@
     const filtroStatus = document.getElementById('filtroStatus');
     const dataInicio = document.getElementById('dataInicio');
     const dataFim = document.getElementById('dataFim');
-
     // Converte qualquer formato para DD/MM/AAAA
     function formatarData(valor) {
       if (!valor) return '-';
       var s = String(valor).trim();
-
       // Formato textual em inglês (Fri Aug 22 2026) ou objeto Date
       var d = new Date(s);
       if (!isNaN(d.getTime()) && /[A-Za-z]{3} [A-Za-z]{3} \d{2} \d{4}/.test(s)) {
@@ -121,20 +119,15 @@
                String(d.getMonth() + 1).padStart(2, '0') + '/' +
                d.getFullYear();
       }
-
       // Extrai só a parte da data, ignorando hora/ISO
       var parte = s.split('T')[0].split(' ')[0];
-
       // AAAA-MM-DD -> DD/MM/AAAA
       var m = parte.match(/^(\d{4})-(\d{2})-(\d{2})$/);
       if (m) return m[3] + '/' + m[2] + '/' + m[1];
-
       // Já DD/MM/AAAA
       if (/^\d{2}\/\d{2}\/\d{4}$/.test(parte)) return parte;
-
       return s;
     }
-
     function carregarReservas() {
       loadingConsulta.style.display = 'block';
       listaReservas.innerHTML = '';
@@ -142,11 +135,9 @@
       const status = filtroStatus.value;
       const ini = dataInicio.value;
       const fim = dataFim.value;
-
       let url = APPS_SCRIPT_URL + '?busca=' + encodeURIComponent(busca) + '&status=' + encodeURIComponent(status);
       if (ini) url += '&dataInicio=' + encodeURIComponent(ini);
       if (fim) url += '&dataFim=' + encodeURIComponent(fim);
-
       fetch(url)
       .then(function (r) { return r.json(); })
       .then(function (reservas) {
@@ -165,7 +156,8 @@
           if (r.status !== 'Realizada') {
             actionsHtml = '<button class="btn btn-small" onclick="marcarRealizada(' + r.linha + ')">✅ Marcar como Realizada</button>';
           }
-          const mesaInfo = (r.status === 'Realizada' && r.mesa) ? ' · 🪑 Reservado a Mesa <strong>' + r.mesa + '</strong>' : '';
+          // Mesa pré-definida: exibe sempre que o campo vier preenchido
+          const mesaInfo = r.mesa ? ' · 🪑 Mesa <strong>' + r.mesa + '</strong>' : '';
           item.innerHTML =
             '<div class="head">' +
               '<span class="nome">' + (r.nome || 'Sem nome') + '</span>' +
@@ -183,7 +175,6 @@
         listaReservas.innerHTML = '<div class="empty-msg">Erro ao carregar reservas. Verifique a URL do Apps Script.</div>';
       });
     }
-
     function atualizarStats(reservas) {
       const pendentes = reservas.filter(function (r) { return r.status !== 'Realizada'; });
       const realizadas = reservas.filter(function (r) { return r.status === 'Realizada'; });
@@ -198,7 +189,6 @@
       document.getElementById('totalLugaresPendentes').textContent = somaLugares(pendentes);
       document.getElementById('totalLugaresRealizadas').textContent = somaLugares(realizadas);
     }
-
     function limparFiltros() {
       buscaInput.value = '';
       filtroStatus.value = '';
@@ -206,7 +196,6 @@
       dataFim.value = '';
       carregarReservas();
     }
-
     function marcarRealizada(linha) {
       const mesa = prompt('Informe o número da mesa para esta reserva:');
       if (mesa === null) return;
@@ -229,7 +218,6 @@
         alert('Erro ao atualizar a reserva.');
       });
     }
-
     document.getElementById('btnBuscar').addEventListener('click', carregarReservas);
     document.getElementById('btnLimpar').addEventListener('click', limparFiltros);
     buscaInput.addEventListener('keydown', function (e) { if (e.key === 'Enter') carregarReservas(); });
